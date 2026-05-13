@@ -67,6 +67,19 @@ except ImportError as e:
     SolverRegistry.register("scip", SCIPSolver, available=False)
     SolverRegistry.set_unavailable("scip", f"pyscipopt not available: {e}")
 
+# F7-1: Register ECOS solver
+try:
+    from .ecos import ECOSSolver
+    SolverRegistry.register("ecos", ECOSSolver, available=True)
+except ImportError as e:
+    import types
+    class ECOSSolver:
+        pass
+    ECOSSolver.solver_name = "ecos"
+    ECOSSolver.__name__ = "ECOSSolver"
+    SolverRegistry.register("ecos", ECOSSolver, available=False)
+    SolverRegistry.set_unavailable("ecos", f"ecos not available: {e}")
+
 __all__ = [
     "BaseSolver",
     "SolverStats", 
@@ -76,6 +89,7 @@ __all__ = [
     "CBCSolver",
     "HiGHSSolver",
     "GLPKSolver",
+    "ECOSSolver",
     "SolverLP",
     "SolverConfig",
     "MultiSolver",

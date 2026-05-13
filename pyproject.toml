@@ -20,6 +20,7 @@ dependencies = [
     "swiglpk (>=5.0.13,<6.0.0)",
     "pulp (>=3.3.0,<4.0.0)",
     "pyscipopt (>=6.1.0,<7.0.0)",
+    "ecos (>=2.0.14,<3.0.0)",
 ]
 
 [tool.poetry]
