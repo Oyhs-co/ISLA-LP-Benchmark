@@ -1,61 +1,78 @@
-# Guía del Desarrollador - ISLA LP Benchmark
+# Guia del Desarrollador - ISLA LP Benchmark v1.2.0
 
-Esta guía es para **desarrolladores** que quieren extender o integrar el proyecto.
+Esta guia es para **desarrolladores** que quieren extender o integrar el proyecto.
 
 ## Arquitectura del Sistema
 
 ```
 src/
 ├── cli/                      # Interfaz CLI
-│   ├── __main__.py           # Punto de entrada
-│   ├── benchmark.py         # Handler benchmark
-│   ├── solve.py           # Handler resolución
-│   └── __init__.py        # Utilidades sistema
-├── solver/                  # Implementaciones de solvers
-│   ├── base.py            # BaseSolver, SolverRegistry
-│   ├── gurobi.py         # Solver Gurobi
-│   ├── highs_solver.py    # Solver HiGHS (native)
-│   ├── glpk_solver.py    # Solver GLPK (native)
-│   ├── cbc.py           # Solver CBC (PuLP)
-│   ├── benchmark.py     # BenchmarkRunner
+│   ├── __main__.py           # Punto de entrada con parser organizado
+│   ├── benchmark.py          # Handler benchmark
+│   ├── solve.py              # Handler resolucion
+│   └── __init__.py           # Utilidades sistema
+├── solver/                   # 15 implementaciones de solvers
+│   ├── base.py               # BaseSolver, SolverRegistry, SolverStats
+│   ├── gurobi.py             # GurobiSolver (gurobipy)
+│   ├── highs_solver.py       # HiGHSSolver (highspy)
+│   ├── glpk_solver.py        # GLPKSolver (swiglpk)
+│   ├── cbc.py                # CBCSolver (PuLP)
+│   ├── scip.py               # SCIPSolver (PySCIPOpt)
+│   ├── ecos.py               # ECOSSolver (ecos)
+│   ├── osqp_solver.py        # OSQPSolver (osqp)
+│   ├── cvxopt_solver.py      # CVXOPTSolver (cvxopt)
+│   ├── scs_solver.py         # SCSSolver (scs)
+│   ├── ipopt_solver.py       # IpoptSolver (cyipopt)
+│   ├── alpine_solver.py      # AlpineSolver (pyoptinterface)
+│   ├── bonmin_solver.py      # BonminSolver (Pyomo)
+│   ├── couenne_solver.py     # CouenneSolver (Pyomo)
+│   ├── symphony_solver.py    # SymphonySolver (Pyomo)
+│   ├── qsoptex_solver.py     # QSoptExSolver (qsopt native C)
+│   ├── benchmark.py          # BenchmarkRunner, BenchmarkConfig
+│   ├── multi_solver.py       # MultiSolverResult
+│   └── __init__.py           # Registro de todos los solvers
+├── analysis/                 # Analisis y reportes
+│   ├── analysis.py           # LPAnalysis - reporte single
+│   ├── benchmark_report.py   # BenchmarkReport - PDF benchmark
+│   ├── benchmark_results.py  # ResultsExporter, export_benchmark_results
+│   ├── multi_analysis.py     # MultiLPAnalysis - reporte multi-problema
 │   └── __init__.py
-├── analysis/               # Análisis y reportes
-│   ├── analysis.py       # Reporte single
-│   ├── benchmark_report.py  # Reporte PDF
-│   ├── benchmark_results.py # Visualización
+├── parser/                   # Parsing de archivos
+│   ├── lp_parser.py          # LPParser - formato texto propio
+│   ├── cplex_parser.py       # CPLEXParser - formato CPLEX/LP
+│   ├── multi_parser.py       # MultiLPParser - multi-problema
 │   └── __init__.py
-├── parser/                # Parsing de archivos
-│   ├── lp_parser.py     # Formato texto
-│   ├── cplex_parser.py # CPLEX/LP
+├── core/                     # Modelos de datos
+│   ├── problem.py            # LinearProblem
+│   ├── constraint.py         # LinearConstraint
+│   ├── bound.py              # VariableBound
+│   ├── solution.py           # Solution
+│   ├── exceptions.py         # LPError y subclases
+│   ├── constants.py          # Constantes centralizadas
+│   ├── verification.py       # verify_solution, compare_solutions
 │   └── __init__.py
-├── core/                  # Modelos de datos
-│   ├── problem.py      # LinearProblem
-│   ├── constraint.py # LinearConstraint
-│   ├── bound.py       # VariableBound
-│   ├── solution.py    # Solution
+├── matrix/                   # Construccion Polars
+│   ├── builder.py            # LPBuilder
+│   ├── matrix.py             # PolarsLP
 │   └── __init__.py
-├── matrix/                # Construcción Polars
-│   ├── builder.py     # LPBuilder
-│   ├── matrix.py     # PolarsLP
+├── visualization/            # Graficos 2D
+│   ├── visualization.py      # LinearVisualization
 │   └── __init__.py
-├── visualization/         # Gráficos
-│   ├── visualization.py
-│   └── __init__.py
-└── utils/                 # Utilidades
-    ├── validation.py
-    ├── exporter.py
-    ├── logging.py
+└── utils/                    # Utilidades
+    ├── validation.py         # LPValidator
+    ├── exporter.py           # LPExporter
+    ├── logging.py            # ExecutionTimes
     └── __init__.py
 ```
 
-## Uso Básico
+## Uso Basico
 
 ### Resolver un Problema
 
 ```python
 from src.parser import LPParser
 from src.matrix import LPBuilder
-from src.solver import SolverRegistry
+from src.solver import SolverRegistry, SolverConfig
 
 # Parsear
 problem = LPParser(texto).parse()
@@ -63,9 +80,10 @@ problem = LPParser(texto).parse()
 # Construir
 lp = LPBuilder(problem).build()
 
-# Obtener solver
-solver_class = SolverRegistry.get('highs')
-solver = solver_class(lp)
+# Obtener solver con configuracion
+solver_class = SolverRegistry.get('cbc')
+config = SolverConfig(verbose=False, time_limit=30.0)
+solver = solver_class(problem, config)
 
 # Resolver
 solution = solver.solve()
@@ -84,16 +102,17 @@ config = BenchmarkConfig(
     warmup_runs=1,
     runs_per_problem=3,
     verbose=False,
-    collect_memory=True
+    collect_memory=True,
+    time_limit=30.0,  # Timeout para cada solver
 )
 
 runner = BenchmarkRunner(config)
 problems = [("problema1", texto)]
-solvers = ['highs', 'glpk', 'cbc']
+solvers = ['gurobi', 'cbc', 'scip']
 
 results = runner.run(problems, solvers)
 
-# Métricas
+# Metricas
 summary = runner.get_summary()
 print(summary['by_solver'])
 ```
@@ -105,49 +124,49 @@ from src.solver import SolverRegistry
 
 # Lista de nombres
 solvers = SolverRegistry.list_solvers()
-print(solvers)  # ['gurobi', 'highs', 'glpk', 'cbc']
+print(solvers)  # ['gurobi', 'highs', 'glpk', 'cbc', 'scip', 'ecos', ...]
 
-# Información detallada
+# Solo disponibles
+available = SolverRegistry.list_solvers(available_only=True)
+print(available)  # Solvers que se pueden usar ahora
+
+# Informacion detallada
 all_info = SolverRegistry.list_all_info()
 for name, info in all_info.items():
-    print(f"{name}: {info['available']}")
+    status = "DISPONIBLE" if info['available'] else "NO DISPONIBLE"
+    error = f" - {info['error']}" if info['error'] else ""
+    print(f"  {name:<20s}{status}{error}")
 ```
 
 ## Registro de Solvers
 
-### @register_solver Decorator
+### Usando @register_solver Decorator
 
 ```python
-from src.solver import BaseSolver, SolverStats, register_solver
+from src.solver import BaseSolver, SolverStats, SolverRegistry, register_solver
 from src.core import Solution, LinearProblem
-from src.matrix import PolarsLP
 
 @register_solver("mi_solver")
 class MiSolver(BaseSolver):
-    """ Implementación de solver personalizado """
-    
-    def __init__(self, model: PolarsLP, config=None):
+    """Implementacion de solver personalizado."""
+
+    def __init__(self, model: LinearProblem, config=None):
         super().__init__(config)
         self.model = model
         self._solution = None
-        self._linear_problem = None
-    
+
     @property
     def solver_name(self) -> str:
         return "mi_solver"
-    
+
     @property
     def solver_version(self) -> str:
         return "1.0.0"
-    
+
     @property
     def is_available(self) -> bool:
-        # Verificar disponibilidad
         return True
-    
-    def set_problem(self, problem: LinearProblem) -> None:
-        self._linear_problem = problem
-    
+
     def solve(self) -> Solution:
         # Resolver problema
         return Solution(
@@ -155,24 +174,40 @@ class MiSolver(BaseSolver):
             objective_value=42.0,
             variables={"x": 1.0, "y": 2.0}
         )
-    
+
     def get_stats(self) -> SolverStats:
         return SolverStats(iterations=2, nodes=0)
 ```
 
-### Registro de SCIP
+### Patron de Importacion con Graceful Degradation
+
+Cada solver sigue este patron para manejar dependencias faltantes:
+
+```python
+try:
+    import ecos
+except ImportError:
+    ecos = None  # El solver se registra como NO DISPONIBLE
+
+@register_solver("ecos")
+class ECOSSolver(BaseSolver):
+    @property
+    def is_available(self) -> bool:
+        return ecos is not None
+
+    def solve(self) -> Solution:
+        if ecos is None:
+            return Solution(status="ERROR: ecos module not available", ...)
+        # ...
+```
+
+### Verificar Disponibilidad de SCIP
 
 ```python
 from src.solver import SolverRegistry
 
-# Verificar si SCIP está disponible
-registry = SolverRegistry()
-info = registry.list_all_info()
+info = SolverRegistry.list_all_info()
 print(info.get('scip', {}).get('available', False))
-
-# SCIP soporta MILP (integer, binary)
-from src.solver import SCIPSolver
-help(SCIPSolver)
 ```
 
 ## APIs Principales
@@ -213,7 +248,22 @@ solution = Solution(
 # Verificar estado
 solution.is_optimal()    # True
 solution.is_infeasible() # False
-solution.is_unbounded()   # False
+solution.is_unbounded()  # False
+```
+
+### SolverConfig
+
+```python
+from src.solver import SolverConfig
+
+config = SolverConfig(
+    verbose=False,
+    time_limit=30.0,     # Timeout en segundos
+    mip_gap=0.01,        # Gap MIP (1%)
+    threads=4,           # Hilos paralelos
+    presolve=1,          # Presolve automatico
+    seed=42,             # Semilla aleatoria
+)
 ```
 
 ### BenchmarkRunner
@@ -223,7 +273,7 @@ runner = BenchmarkRunner(config)
 
 # Agregar resultado
 runner.results.append(BenchmarkResult(
-    solver_name="highs",
+    solver_name="cbc",
     problem_name="problema1",
     problem_text=texto,
     solution=solution,
@@ -241,7 +291,7 @@ runner.export_csv(Path("results.csv"))
 runner.export_json(Path("results.json"))
 ```
 
-## Verificación de Soluciones
+## Verificacion de Soluciones
 
 ### verify_solution()
 
@@ -249,15 +299,15 @@ runner.export_json(Path("results.json"))
 from src.core.verification import verify_solution, compare_solutions
 from src.core import LinearProblem, Solution
 
-# Verificar una solución
+# Verificar una solucion
 is_valid, issues = verify_solution(problem, solution)
 if not is_valid:
     print("Problemas encontrados:")
     for issue in issues:
         print(f"  - {issue}")
 
-# Comparar soluciones de múltiples solvers
-solutions = [gurobi_sol, highs_sol, glpk_sol]
+# Comparar soluciones de multiples solvers
+solutions = [gurobi_sol, cbc_sol, scip_sol]
 warnings = compare_solutions(problem, solutions)
 for warning in warnings:
     print(f"ADVERTENCIA: {warning}")
@@ -265,7 +315,7 @@ for warning in warnings:
 
 **Tolerancias**: Usa `FEASIBILITY_TOLERANCE` (1e-6) por defecto.
 
-## Exportación Avanzada
+## Exportacion Avanzada
 
 ### ResultsExporter
 
@@ -278,7 +328,7 @@ exporter = ResultsExporter(runner)
 exporter.to_markdown(Path("report.md"))
 exporter.to_html(Path("report.html"), include_plots=True, plots_dir=Path("plots"))
 
-# Método rápido (recomendado)
+# Metodo rapido (recomendado)
 paths = export_benchmark_results(
     runner=runner,
     output_dir=Path("data/benchmark_output"),
@@ -288,7 +338,7 @@ paths = export_benchmark_results(
 # Retorna: {"json": Path(...), "csv": Path(...), "md": Path(...), "html": Path(...)}
 ```
 
-## Análisis Multi-Problema
+## Analisis Multi-Problema
 
 ### MultiLPAnalysis
 
@@ -296,20 +346,54 @@ paths = export_benchmark_results(
 from src.analysis.multi_analysis import MultiLPAnalysis
 from src.solver import MultiSolverResult
 
-# results: MultiSolverResult
 analysis = MultiLPAnalysis(results)
 analysis.generate_pdf("output/multi_report.pdf")
 ```
 
 **Secciones del reporte**:
-1. Portada con estadísticas
+1. Portada con estadisticas
 2. Resumen ejecutivo
-3. Página individual por problema
+3. Pagina individual por problema
 4. Resumen de tiempos
 
 ---
 
 ## Extensiones
+
+### Agregar Nuevo Solver
+
+1. Crear archivo en `src/solver/mi_solver.py`
+2. Implementar clase que hereda de `BaseSolver`
+3. Usar decorador `@register_solver("mi_solver")`
+4. Agregar import en `src/solver/__init__.py` con try/except
+5. Agregar dependencia en `pyproject.toml`
+
+```python
+# src/solver/mi_solver.py
+from src.solver import BaseSolver, SolverStats, register_solver
+from src.core import Solution
+from src.matrix import PolarsLP
+
+try:
+    import mi_paquete
+except ImportError:
+    mi_paquete = None
+
+@register_solver("mi_solver")
+class MiSolver(BaseSolver):
+    @property
+    def solver_name(self) -> str:
+        return "mi_solver"
+
+    @property
+    def is_available(self) -> bool:
+        return mi_paquete is not None
+
+    def solve(self) -> Solution:
+        if mi_paquete is None:
+            return Solution(status="ERROR: mi_paquete not available", ...)
+        # Logica de resolucion
+```
 
 ### Agregar Nuevo Parser
 
@@ -320,13 +404,13 @@ from ..core import LinearProblem
 class MiParser:
     def __init__(self, texto: str):
         self.texto = texto
-    
+
     def parse(self) -> LinearProblem:
-        # Lógica de parsing
+        # Logica de parsing
         return LinearProblem(...)
 ```
 
-### Agregar Visualización
+### Agregar Visualizacion
 
 ```python
 from src.analysis.benchmark_results import BenchmarkVisualizer
@@ -349,17 +433,30 @@ except LPParseError as e:
     print(f"Error de parseo: {e}")
 ```
 
-### Verificar Solución
+### Verificar Solucion
 
 ```python
 solution = solver.solve()
 
 if solution.is_optimal():
-    print(f"Óptimo: {solution.objective_value}")
+    print(f"Optimo: {solution.objective_value}")
 elif solution.is_infeasible():
     print("Problema infactible")
 elif solution.is_unbounded():
     print("Problema no acotado")
+```
+
+### Iterar SolverRegistry
+
+```python
+from src.solver import SolverRegistry
+
+# Probar cada solver disponible
+for name in SolverRegistry.list_solvers(available_only=True):
+    cls = SolverRegistry.get(name)
+    solver = cls(problem)
+    sol = solver.solve()
+    print(f"{name}: {sol.status} = {sol.objective_value}")
 ```
 
 ---
