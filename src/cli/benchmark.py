@@ -24,7 +24,9 @@ def run_benchmark(
     plot_comparison: bool = False,
     output_dir: Optional[str] = None,
     verbose: bool = False,
-    pdf: bool = False
+    pdf: bool = False,
+    quiet: bool = False,
+    time_limit: Optional[float] = None,
 ) -> int:
     """Ejecuta el modo benchmark."""
     solvers = solvers or ['gurobi']
@@ -53,18 +55,22 @@ def run_benchmark(
             ("Problema_3", "min Z = 2x + 3y\nx + y >= 5\n2x + y >= 8\nx >= 0\ny >= 0"),
         ]
     
-    print(f"\n{'='*50}")
-    print("BENCHMARK MODE")
-    print("="*50)
-    print(f"Problems: {len(problems)}")
-    print(f"Solvers: {', '.join(solvers)}")
-    print(f"Repetitions: {repetitions}")
-    print(f"Output: {output_dir}")
-    print("="*50 + "\n")
+    if not quiet:
+        print(f"\n{'='*50}")
+        print("BENCHMARK")
+        print("="*50)
+        print(f"Problems: {len(problems)}")
+        print(f"Solvers: {', '.join(solvers)}")
+        print(f"Repetitions: {repetitions}")
+        print(f"Output: {output_dir}")
+        if time_limit:
+            print(f"Time limit: {time_limit}s")
+        print("="*50 + "\n")
     
     config = BenchmarkConfig(
         verbose=verbose,
-        runs_per_problem=repetitions
+        runs_per_problem=repetitions,
+        time_limit=time_limit,
     )
     runner = BenchmarkRunner(config)
     runner.run(problems, solvers)
