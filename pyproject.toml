@@ -21,6 +21,7 @@ dependencies = [
     "pulp (>=3.3.0,<4.0.0)",
     "pyscipopt (>=6.1.0,<7.0.0)",
     "ecos (>=2.0.14,<3.0.0)",
+    "osqp (>=1.1.1,<2.0.0)",
 ]
 
 [tool.poetry]

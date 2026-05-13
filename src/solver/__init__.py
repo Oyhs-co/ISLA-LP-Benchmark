@@ -80,6 +80,19 @@ except ImportError as e:
     SolverRegistry.register("ecos", ECOSSolver, available=False)
     SolverRegistry.set_unavailable("ecos", f"ecos not available: {e}")
 
+# F7-2: Register OSQP solver
+try:
+    from .osqp_solver import OSQPSolver
+    SolverRegistry.register("osqp", OSQPSolver, available=True)
+except ImportError as e:
+    import types
+    class OSQPSolver:
+        pass
+    OSQPSolver.solver_name = "osqp"
+    OSQPSolver.__name__ = "OSQPSolver"
+    SolverRegistry.register("osqp", OSQPSolver, available=False)
+    SolverRegistry.set_unavailable("osqp", f"osqp not available: {e}")
+
 __all__ = [
     "BaseSolver",
     "SolverStats", 
@@ -90,6 +103,7 @@ __all__ = [
     "HiGHSSolver",
     "GLPKSolver",
     "ECOSSolver",
+    "OSQPSolver",
     "SolverLP",
     "SolverConfig",
     "MultiSolver",
