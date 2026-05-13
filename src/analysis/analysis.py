@@ -55,16 +55,19 @@ class LPAnalysis:
         pdf.set_margins(MARGIN, MARGIN, MARGIN)
         pdf.set_auto_page_break(auto=True, margin=15)
         
+        # Pagina 1: Portada
         pdf.add_page()
         self.page_count += 1
         self._build_portada(pdf)
         
+        # Pagina 2: Resumen ejecutivo y detalles tecnicos
         pdf.add_page()
         self.page_count += 1
         self._build_header(pdf)
         self._build_resumen_ejecutivo(pdf)
         self._build_detalles_tecnicos(pdf)
         
+        # Pagina 3: Datos del problema
         pdf.add_page()
         self.page_count += 1
         self._build_header(pdf)
@@ -72,6 +75,7 @@ class LPAnalysis:
         self._build_funcion_objetivo(pdf)
         self._build_restricciones_tabla(pdf)
         
+        # Pagina 4: Solucion optima y analisis
         pdf.add_page()
         self.page_count += 1
         self._build_header(pdf)
@@ -79,6 +83,21 @@ class LPAnalysis:
         self._build_holgura_dual(pdf)
         self._build_costos_reducidos(pdf)
         
+        # Pagina 5: Validacion y configuracion
+        pdf.add_page()
+        self.page_count += 1
+        self._build_header(pdf)
+        self._build_validacion_modelo(pdf)
+        self._build_configuracion_solver(pdf)
+        
+        # Pagina 6: Base optima y metricas numericas
+        pdf.add_page()
+        self.page_count += 1
+        self._build_header(pdf)
+        self._build_base_optima(pdf)
+        self._build_metricas_numericas(pdf)
+        
+        # Pagina 7: Analisis de sensibilidad y grafico (si es 2D)
         if len(self.problem.variables) == 2:
             pdf.add_page()
             self.page_count += 1
@@ -91,6 +110,19 @@ class LPAnalysis:
             self._build_header(pdf)
             self._build_analisis_sensibilidad(pdf)
         
+        # Pagina 8: Log de progreso e interpretacion
+        pdf.add_page()
+        self.page_count += 1
+        self._build_header(pdf)
+        self._build_log_progreso(pdf)
+        self._build_interpretacion_ejecutiva(pdf)
+        
+        # Pagina 9: Referencias teoricas
+        pdf.add_page()
+        self.page_count += 1
+        self._build_header(pdf)
+        self._build_referencias_teoricas(pdf)
+        
         pdf.output(output_path)
 
     def _build_header(self, pdf: 'ReporteAcademico') -> None:
@@ -99,49 +131,50 @@ class LPAnalysis:
         pdf.set_text_color(0, 51, 102)
         pdf.cell(0, 7, "SOLUCION DE PROGRAMA LINEAL", align=Align.C, new_y=YPos.NEXT)
         
-        pdf.set_font('Helvetica', 'I', 8)
+        pdf.ln(2)
+        pdf.set_font('Helvetica', 'I', 9)
         pdf.set_text_color(100, 100, 100)
-        pdf.cell(0, 6, "Metodo Simplex - Solucionador con Gurobi", align=Align.C, new_y=YPos.NEXT)
+        pdf.cell(0, 6, f"Metodo Simplex - Solucionador con {self.solver_name.upper()}", align=Align.C, new_y=YPos.NEXT)
         
         pdf.ln(3)
         pdf.set_draw_color(0, 51, 102)
         pdf.set_line_width(0.5)
         pdf.line(MARGIN, pdf.get_y(), PAGE_WIDTH - MARGIN, pdf.get_y())
-        pdf.ln(3)
+        pdf.ln(5)
 
     def _build_portada(self, pdf: 'ReporteAcademico') -> None:
         """Construye la portada del reporte."""
-        pdf.set_font('Helvetica', 'B', 22)
+        pdf.set_font('Helvetica', 'B', 24)
         pdf.set_text_color(0, 51, 102)
-        pdf.ln(35)
-        pdf.cell(0, 10, "SOLUCION DE PROGRAMA LINEAL", align=Align.C, new_y=YPos.NEXT)
+        pdf.ln(40)
+        pdf.cell(0, 12, "SOLUCION DE PROGRAMA LINEAL", align=Align.C, new_y=YPos.NEXT)
         
-        pdf.ln(8)
-        pdf.set_font('Helvetica', 'I', 12)
+        pdf.ln(10)
+        pdf.set_font('Helvetica', 'I', 14)
         pdf.set_text_color(100, 100, 100)
-        pdf.cell(0, 8, "Reporte Academico de Optimizacion", align=Align.C, new_y=YPos.NEXT)
+        pdf.cell(0, 10, "Reporte Academico de Optimizacion", align=Align.C, new_y=YPos.NEXT)
         
-        pdf.ln(25)
-        pdf.set_font('Helvetica', '', 11)
+        pdf.ln(30)
+        pdf.set_font('Helvetica', '', 12)
         pdf.set_text_color(60, 60, 60)
         
         tipo = "Maximizacion" if self.problem.sense.lower() == "max" else "Minimizacion"
-        pdf.cell(0, 7, f"Tipo de problema: {tipo}", align=Align.C, new_y=YPos.NEXT)
-        pdf.ln(3)
-        pdf.cell(0, 7, f"Numero de variables: {len(self.problem.variables)}", align=Align.C, new_y=YPos.NEXT)
-        pdf.ln(3)
-        pdf.cell(0, 7, f"Numero de restricciones: {len(self.problem.constraints)}", align=Align.C, new_y=YPos.NEXT)
+        pdf.cell(0, 8, f"Tipo de problema: {tipo}", align=Align.C, new_y=YPos.NEXT)
+        pdf.ln(4)
+        pdf.cell(0, 8, f"Numero de variables: {len(self.problem.variables)}", align=Align.C, new_y=YPos.NEXT)
+        pdf.ln(4)
+        pdf.cell(0, 8, f"Numero de restricciones: {len(self.problem.constraints)}", align=Align.C, new_y=YPos.NEXT)
         
-        pdf.ln(25)
-        pdf.set_font('Helvetica', 'I', 10)
+        pdf.ln(30)
+        pdf.set_font('Helvetica', 'I', 11)
         pdf.set_text_color(100, 100, 100)
         fecha = datetime.now().strftime("%d de %B de %Y")
-        pdf.cell(0, 7, f"Fecha de generacion: {fecha}", align=Align.C, new_y=YPos.NEXT)
+        pdf.cell(0, 8, f"Fecha de generacion: {fecha}", align=Align.C, new_y=YPos.NEXT)
         
-        pdf.ln(8)
+        pdf.ln(10)
         pdf.set_draw_color(0, 51, 102)
-        pdf.set_line_width(0.8)
-        pdf.line(PAGE_WIDTH/2 - 30, pdf.get_y(), PAGE_WIDTH/2 + 30, pdf.get_y())
+        pdf.set_line_width(1.0)
+        pdf.line(MARGIN + 30, pdf.get_y(), PAGE_WIDTH - MARGIN - 30, pdf.get_y())
         pdf.set_text_color(0, 0, 0)
 
     def _build_resumen_ejecutivo(self, pdf: 'ReporteAcademico') -> None:
@@ -609,7 +642,7 @@ class LPAnalysis:
 
     def _build_grafico(self, pdf: 'ReporteAcademico') -> None:
         """Construye la seccion del grafico de region factible."""
-        pdf.ln(3)
+        pdf.ln(5)
         
         pdf.set_font('Helvetica', 'B', 11)
         pdf.set_text_color(0, 51, 102)
@@ -618,13 +651,17 @@ class LPAnalysis:
         pdf.set_draw_color(0, 51, 102)
         pdf.set_line_width(0.5)
         pdf.line(MARGIN, pdf.get_y(), PAGE_WIDTH - MARGIN, pdf.get_y())
-        pdf.ln(2)
+        pdf.ln(3)
         
         pdf.set_font('Helvetica', '', 8)
+        pdf.set_text_color(60, 60, 60)
         pdf.cell(0, 5, f"Grafico para variables: {self.problem.variables[0]}, {self.problem.variables[1]}", 
                  new_x=XPos.LEFT, new_y=YPos.NEXT)
+        pdf.ln(2)
         
         try:
+            import matplotlib
+            matplotlib.use('Agg')
             import matplotlib.pyplot as plt
             import numpy as np
             from matplotlib.patches import Polygon
@@ -635,7 +672,7 @@ class LPAnalysis:
             
             x_min, x_max, y_min, y_max = self._calculate_plot_range(var_x, var_y)
             
-            fig, ax = plt.subplots(figsize=(7, 5.5))
+            fig, ax = plt.subplots(figsize=(5, 4))
             
             colors = list(TAB10_COLORS)
             x_vals = np.linspace(x_min, x_max, 200)
@@ -650,17 +687,16 @@ class LPAnalysis:
                 sense_label = c.sense
                 label = f"R{i+1}: {a:.1f}{var_x} {sense_label} {rhs:.1f}"
                 
+                linestyle = '--' if c.sense == ">=" else ('-' if c.sense == "<=" else ':')
                 if abs(b) < 1e-10 and abs(a) > 1e-10:
                     x_const = rhs / a
                     y_range = np.linspace(y_min, y_max, 200)
                     x_line = np.full_like(y_range, x_const)
-                    linestyle = '--' if c.sense == ">=" else ('-' if c.sense == "<=" else ':')
                     ax.plot(x_line, y_range, color=colors[i % len(colors)], 
                             linewidth=2, linestyle=linestyle, label=label)
                 else:
                     y_vals = (rhs - a * x_vals) / b
                     valid = np.isfinite(y_vals)
-                    linestyle = '--' if c.sense == ">=" else ('-' if c.sense == "<=" else ':')
                     ax.plot(x_vals[valid], y_vals[valid], color=colors[i % len(colors)], 
                             linewidth=2, linestyle=linestyle, label=label)
             
@@ -679,6 +715,7 @@ class LPAnalysis:
                        [v[1] for v in vertices] + [vertices[0][1]], 
                        alpha=0.3, facecolor='#90EE90', edgecolor='#228B22', linewidth=2)
             
+            linestyle_gray = ':'
             for i, c in enumerate(all_constraints):
                 if c not in self.problem.constraints:
                     a = c.coefficients.get(var_x, 0)
@@ -689,13 +726,12 @@ class LPAnalysis:
                         x_const = rhs / a
                         y_range = np.linspace(y_min, y_max, 200)
                         x_line = np.full_like(y_range, x_const)
-                        linestyle = '--' if c.sense == ">=" else ('-' if c.sense == "<=" else ':')
                         ax.plot(x_line, y_range, color='gray', linewidth=1.5, 
-                               linestyle=linestyle, alpha=0.6)
+                                linestyle=linestyle_gray, alpha=0.6)
                     elif abs(a) < 1e-10 and abs(b) > 1e-10:
                         y_const = rhs / b
                         ax.axhline(y_const, color='gray', linewidth=1.5, 
-                                  linestyle=linestyle, alpha=0.6)
+                                  linestyle=linestyle_gray, alpha=0.6)
             
             if self.solution.variables:
                 x = self.solution.variables.get(var_x, 0)
@@ -732,14 +768,21 @@ class LPAnalysis:
             ax.legend(loc='upper right', fontsize=8, framealpha=0.9)
             
             with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
-                plt.savefig(tmp.name, dpi=150, bbox_inches='tight', facecolor='white')
+                plt.savefig(tmp.name, dpi=300, bbox_inches='tight', facecolor='white')
                 tmp_path = tmp.name
             
             plt.close()
             
             if os.path.exists(tmp_path):
-                max_img_width = CONTENT_WIDTH
-                pdf.image(tmp_path, x=MARGIN, w=max_img_width)
+                pdf.ln(5)
+                # Calcular ancho proporcional respetando margenes
+                img_width = min(CONTENT_WIDTH - 30, 120)
+                x_pos = MARGIN + (CONTENT_WIDTH - img_width) / 2
+                if pdf.get_y() + 80 > 279.4 - 15:  # Check if image fits
+                    pdf.add_page()
+                    self._build_header(pdf)
+                    pdf.ln(5)
+                pdf.image(tmp_path, x=x_pos, w=img_width)
                 os.unlink(tmp_path)
                 
         except Exception as e:
@@ -934,6 +977,322 @@ class LPAnalysis:
         if constraint_str.startswith("+"):
             constraint_str = constraint_str[1:]
         return constraint_str
+
+    def _build_validacion_modelo(self, pdf: 'ReporteAcademico') -> None:
+        """Construye la seccion de validacion del modelo."""
+        pdf.set_font('Helvetica', 'B', 11)
+        pdf.set_text_color(0, 51, 102)
+        pdf.cell(0, 6, "VALIDACION DEL MODELO", new_x=XPos.LEFT, new_y=YPos.NEXT)
+        
+        pdf.set_draw_color(0, 51, 102)
+        pdf.set_line_width(0.5)
+        pdf.line(MARGIN, pdf.get_y(), PAGE_WIDTH - MARGIN, pdf.get_y())
+        pdf.ln(3)
+        
+        pdf.set_font('Helvetica', '', 8)
+        pdf.set_text_color(60, 60, 60)
+        pdf.multi_cell(CONTENT_WIDTH, 4, "Verificacion de la integridad del modelo: limites de variables, consistencia de restricciones y factibilidad.")
+        pdf.ln(3)
+        
+        # Validacion basica del modelo
+        is_valid = True
+        errors = []
+        warnings = []
+        
+        # Check basic problem structure
+        if not self.problem.variables:
+            is_valid = False
+            errors.append("No variables defined")
+        if not self.problem.constraints:
+            warnings.append("No constraints defined")
+        
+        is_valid = is_valid and len(errors) == 0
+        
+        try:
+            pdf.set_font('Helvetica', 'B', 9)
+            if is_valid:
+                pdf.set_text_color(0, 128, 0)
+                pdf.cell(0, 5, "Modelo VALIDO", new_x=XPos.LEFT, new_y=YPos.NEXT)
+            else:
+                pdf.set_text_color(200, 0, 0)
+                pdf.cell(0, 5, "Modelo CON ERRORES", new_x=XPos.LEFT, new_y=YPos.NEXT)
+            
+            pdf.set_font('Helvetica', '', 7)
+            pdf.set_text_color(0, 0, 0)
+            
+            if errors:
+                pdf.ln(2)
+                pdf.set_text_color(200, 0, 0)
+                pdf.cell(0, 4, "Errores encontrados:", new_x=XPos.LEFT, new_y=YPos.NEXT)
+                for err in errors[:5]:
+                    pdf.cell(5, 4, "-")
+                    pdf.cell(0, 4, err[:60], new_x=XPos.LEFT, new_y=YPos.NEXT)
+            
+            if warnings:
+                pdf.ln(2)
+                pdf.set_text_color(200, 140, 0)
+                pdf.cell(0, 4, "Advertencias:", new_x=XPos.LEFT, new_y=YPos.NEXT)
+                for warn in warnings[:5]:
+                    pdf.cell(5, 4, "-")
+                    pdf.cell(0, 4, warn[:60], new_x=XPos.LEFT, new_y=YPos.NEXT)
+        except Exception as e:
+            pdf.set_text_color(100, 100, 100)
+            pdf.cell(0, 5, "Error en validacion", new_x=XPos.LEFT, new_y=YPos.NEXT)
+        
+        pdf.set_text_color(0, 0, 0)
+        pdf.ln(3)
+
+    def _build_configuracion_solver(self, pdf: 'ReporteAcademico') -> None:
+        """Construye la seccion de configuracion del solver."""
+        pdf.set_font('Helvetica', 'B', 11)
+        pdf.set_text_color(0, 51, 102)
+        pdf.cell(0, 6, "CONFIGURACION DEL SOLVER", new_x=XPos.LEFT, new_y=YPos.NEXT)
+        
+        pdf.set_draw_color(0, 51, 102)
+        pdf.set_line_width(0.3)
+        pdf.line(MARGIN, pdf.get_y(), PAGE_WIDTH - MARGIN, pdf.get_y())
+        pdf.ln(3)
+        
+        pdf.set_font('Helvetica', '', 8)
+        pdf.set_text_color(0, 0, 0)
+        
+        config_data = [
+            ("Solver", self.solver_name.upper()),
+            ("Sentido", "Maximizacion" if self.problem.sense.lower() == "max" else "Minimizacion"),
+            ("Variables", str(len(self.problem.variables))),
+            ("Restricciones", str(len(self.problem.constraints))),
+        ]
+        
+        for label, value in config_data:
+            pdf.set_x(MARGIN + 5)
+            pdf.set_font('Helvetica', '', 8)
+            pdf.cell(40, 5, f"{label}:")
+            pdf.set_font('Helvetica', 'B', 8)
+            pdf.cell(0, 5, value, new_x=XPos.LEFT, new_y=YPos.NEXT)
+            pdf.set_x(MARGIN)
+        
+        pdf.ln(3)
+
+    def _build_base_optima(self, pdf: 'ReporteAcademico') -> None:
+        """Construye la seccion de base optima."""
+        pdf.set_font('Helvetica', 'B', 11)
+        pdf.set_text_color(0, 51, 102)
+        pdf.cell(0, 6, "BASE OPTIMA (VARIABLES BASICAS)", new_x=XPos.LEFT, new_y=YPos.NEXT)
+        
+        pdf.set_draw_color(0, 51, 102)
+        pdf.set_line_width(0.3)
+        pdf.line(MARGIN, pdf.get_y(), PAGE_WIDTH - MARGIN, pdf.get_y())
+        pdf.ln(3)
+        
+        pdf.set_font('Helvetica', '', 7)
+        pdf.set_text_color(60, 60, 60)
+        pdf.multi_cell(CONTENT_WIDTH, 4, "Variables en la base: aquellas con valor > 0 en la solucion optima. Variables no-basicas: valor = 0.")
+        pdf.ln(3)
+        
+        w = [CONTENT_WIDTH * 0.25, CONTENT_WIDTH * 0.25, CONTENT_WIDTH * 0.25, CONTENT_WIDTH * 0.25]
+        
+        pdf.set_fill_color(0, 51, 102)
+        pdf.set_font('Helvetica', 'B', 7)
+        pdf.set_text_color(255, 255, 255)
+        pdf.cell(w[0], 5, "Variable", align=Align.C, fill=True)
+        pdf.cell(w[1], 5, "Valor", align=Align.C, fill=True)
+        pdf.cell(w[2], 5, "Estado", align=Align.C, fill=True)
+        pdf.cell(w[3], 5, "Costo Red.", align=Align.C, fill=True)
+        pdf.ln(5)
+        
+        pdf.set_font('Helvetica', '', 7)
+        pdf.set_text_color(0, 0, 0)
+        
+        for var, value in self.solution.variables.items():
+            pdf.cell(w[0], 4, str(var), align=Align.C)
+            pdf.cell(w[1], 4, f"{value:.4f}", align=Align.C)
+            
+            if abs(value) > 1e-6:
+                pdf.set_text_color(0, 128, 0)
+                pdf.cell(w[2], 4, "BASICA", align=Align.C)
+                pdf.set_text_color(0, 0, 0)
+            else:
+                pdf.cell(w[2], 4, "NO BASICA", align=Align.C)
+            
+            reduced_cost = self.solution.reduced_costs.get(var, 0) if self.solution.reduced_costs else 0
+            pdf.cell(w[3], 4, f"{reduced_cost:.4f}", align=Align.C)
+            pdf.ln(4)
+        
+        pdf.ln(3)
+
+    def _build_metricas_numericas(self, pdf: 'ReporteAcademico') -> None:
+        """Construye la seccion de metricas numericas."""
+        pdf.set_font('Helvetica', 'B', 11)
+        pdf.set_text_color(0, 51, 102)
+        pdf.cell(0, 6, "METRICAS NUMERICAS", new_x=XPos.LEFT, new_y=YPos.NEXT)
+        
+        pdf.set_draw_color(0, 51, 102)
+        pdf.set_line_width(0.3)
+        pdf.line(MARGIN, pdf.get_y(), PAGE_WIDTH - MARGIN, pdf.get_y())
+        pdf.ln(3)
+        
+        pdf.set_font('Helvetica', '', 8)
+        pdf.set_text_color(60, 60, 60)
+        pdf.multi_cell(CONTENT_WIDTH, 4, "Calidad numerica: violaciones de limites, restricciones y numero de condicion de la matriz.")
+        pdf.ln(3)
+        
+        col_w = CONTENT_WIDTH / 2
+        
+        pdf.set_x(MARGIN)
+        pdf.set_font('Helvetica', 'B', 8)
+        pdf.cell(col_w, 5, "Metrica", align=Align.L)
+        pdf.cell(col_w, 5, "Valor", align=Align.R)
+        pdf.ln(5)
+        
+        pdf.set_font('Helvetica', '', 8)
+        
+        max_bound_viol = getattr(self.solution, 'max_bound_viol', 0)
+        max_constr_viol = getattr(self.solution, 'max_constraint_viol', 0)
+        condition_num = getattr(self.solution, 'condition_number', None)
+        
+        metrics = [
+            ("Violacion max. limites", f"{max_bound_viol:.2e}"),
+            ("Violacion max. restricciones", f"{max_constr_viol:.2e}"),
+            ("Numero de condicion", f"{condition_num:.2e}" if condition_num else "N/A"),
+        ]
+        
+        pdf.set_x(MARGIN)
+        for label, value in metrics:
+            pdf.cell(col_w, 5, label)
+            pdf.cell(col_w, 5, value, align=Align.R)
+            pdf.ln(5)
+            pdf.set_x(MARGIN)
+        
+        pdf.ln(3)
+
+    def _build_log_progreso(self, pdf: 'ReporteAcademico') -> None:
+        """Construye la seccion de log de progreso."""
+        pdf.set_font('Helvetica', 'B', 11)
+        pdf.set_text_color(0, 51, 102)
+        pdf.cell(0, 6, "LOG DE PROGRESO", new_x=XPos.LEFT, new_y=YPos.NEXT)
+        
+        pdf.set_draw_color(0, 51, 102)
+        pdf.set_line_width(0.3)
+        pdf.line(MARGIN, pdf.get_y(), PAGE_WIDTH - MARGIN, pdf.get_y())
+        pdf.ln(3)
+        
+        progress_log = getattr(self.solution, 'progress_log', None)
+        
+        if progress_log and len(progress_log) > 0:
+            pdf.set_font('Helvetica', '', 7)
+            pdf.set_text_color(0, 0, 0)
+            
+            w = [CONTENT_WIDTH * 0.15, CONTENT_WIDTH * 0.25, CONTENT_WIDTH * 0.3, CONTENT_WIDTH * 0.3]
+            
+            pdf.set_fill_color(0, 51, 102)
+            pdf.set_font('Helvetica', 'B', 6)
+            pdf.set_text_color(255, 255, 255)
+            pdf.cell(w[0], 4, "Iter", align=Align.C, fill=True)
+            pdf.cell(w[1], 4, "Objetivo", align=Align.C, fill=True)
+            pdf.cell(w[2], 4, "Infactibilidad", align=Align.C, fill=True)
+            pdf.cell(w[3], 4, "Tiempo", align=Align.C, fill=True)
+            pdf.ln(4)
+            
+            pdf.set_font('Helvetica', '', 6)
+            pdf.set_text_color(0, 0, 0)
+            
+            for point in progress_log[:20]:
+                pdf.cell(w[0], 3, str(point.iteration), align=Align.C)
+                pdf.cell(w[1], 3, f"{point.objective:.4f}", align=Align.C)
+                pdf.cell(w[2], 3, f"{point.infeasibility:.2e}", align=Align.C)
+                pdf.cell(w[3], 3, f"{point.time:.2f}s", align=Align.C)
+                pdf.ln(3)
+        else:
+            pdf.set_font('Helvetica', 'I', 8)
+            pdf.set_text_color(100, 100, 100)
+            pdf.cell(0, 5, "No hay datos de progreso disponibles.", new_x=XPos.LEFT, new_y=YPos.NEXT)
+        
+        pdf.set_text_color(0, 0, 0)
+        pdf.ln(3)
+
+    def _build_interpretacion_ejecutiva(self, pdf: 'ReporteAcademico') -> None:
+        """Construye la seccion de interpretacion ejecutiva."""
+        pdf.set_font('Helvetica', 'B', 11)
+        pdf.set_text_color(0, 51, 102)
+        pdf.cell(0, 6, "INTERPRETACION EJECUTIVA", new_x=XPos.LEFT, new_y=YPos.NEXT)
+        
+        pdf.set_draw_color(0, 51, 102)
+        pdf.set_line_width(0.3)
+        pdf.line(MARGIN, pdf.get_y(), PAGE_WIDTH - MARGIN, pdf.get_y())
+        pdf.ln(3)
+        
+        pdf.set_font('Helvetica', '', 9)
+        pdf.set_text_color(0, 0, 0)
+        
+        if self.solution.status == 'OPTIMAL':
+            obj_val = self.solution.objective_value or 0
+            sense = "maximizar" if self.problem.sense.lower() == "max" else "minimizar"
+            
+            texto = (
+                f"La solucion optima permite {sense} el valor de la funcion objetivo "
+                f"hasta {obj_val:,.2f}. "
+                f"Se identificaron {len([v for v in self.solution.variables.values() if abs(v) > 1e-6])} "
+                f"variables con valor positivo en la solucion optima. "
+            )
+            
+            active_constraints = sum(1 for c in self.problem.constraints 
+                                  if self._is_constraint_active(c))
+            texto += f"Existen {active_constraints} restricciones activas que limitan la solucion."
+            
+            pdf.multi_cell(CONTENT_WIDTH, 5, texto)
+        else:
+            pdf.multi_cell(CONTENT_WIDTH, 5, 
+                          f"El problema no tiene solucion optima. Estado: {self.solution.status}. "
+                          "Verifique la formulacion del modelo.")
+        
+        pdf.ln(3)
+
+    def _build_referencias_teoricas(self, pdf: 'ReporteAcademico') -> None:
+        """Construye la seccion de referencias teoricas."""
+        pdf.set_font('Helvetica', 'B', 11)
+        pdf.set_text_color(0, 51, 102)
+        pdf.cell(0, 6, "REFERENCIAS TEORICAS", new_x=XPos.LEFT, new_y=YPos.NEXT)
+        
+        pdf.set_draw_color(0, 51, 102)
+        pdf.set_line_width(0.3)
+        pdf.line(MARGIN, pdf.get_y(), PAGE_WIDTH - MARGIN, pdf.get_y())
+        pdf.ln(5)
+        
+        pdf.set_font('Helvetica', '', 8)
+        pdf.set_text_color(60, 60, 60)
+        
+        referencias = [
+            "Metodo Simplex: Algoritmo iterativo para PL desarrollado por George Dantzig (1947).",
+            "Holgura (Slack): Diferencia entre el valor de la restriccion y el lado derecho.",
+            "Precio Sombra: Cambio en el objetivo por unidad de relajacion en el RHS.",
+            "Costo Reducido: Costo marginal para que una variable no-basica entre a la base.",
+            "Variables Basicas: Variables con valor > 0 en la solucion actual.",
+            "Analisis de Sensibilidad: Estudio del rango de validez de los coeficientes.",
+        ]
+        
+        for ref in referencias:
+            pdf.cell(5, 5, "-")
+            pdf.multi_cell(CONTENT_WIDTH - 5, 5, ref)
+            pdf.ln(2)
+        
+        pdf.ln(3)
+
+    def _is_constraint_active(self, c) -> bool:
+        """Verifica si una restriccion es activa."""
+        if not self.solution.variables:
+            return False
+        
+        value = sum(c.coefficients.get(var, 0) * self.solution.variables.get(var, 0) 
+                   for var in self.problem.variables)
+        
+        if c.sense == '<=':
+            slack = c.rhs - value
+        elif c.sense == '>=':
+            slack = value - c.rhs
+        else:
+            slack = abs(value - c.rhs)
+        
+        return abs(slack) < 1e-6
 
 
 class ReporteAcademico(FPDF):

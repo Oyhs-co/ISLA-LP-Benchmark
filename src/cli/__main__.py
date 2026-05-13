@@ -148,12 +148,12 @@ def main(argv: list[str] = None) -> int:
     if args.benchmark:
         return benchmark.run_benchmark(
             input_path=Path(args.input) if args.input else None,
-            solvers=args.solvers,
+            solvers=args.solvers if args.solvers else ['gurobi'],
             repetitions=args.repetitions,
             visualize=args.plot_comparison,
             output_csv=args.output_csv,
             plot_comparison=args.plot_comparison,
-            output_dir=args.output_dir,
+            output_dir=args.output_dir if args.output_dir else None,
             verbose=args.verbose,
             pdf=args.pdf
         )
@@ -164,6 +164,7 @@ def main(argv: list[str] = None) -> int:
                 Path(args.input),
                 solver_name=solver_name,
                 visualize=args.visualize,
+                pdf=args.pdf,
                 times=args.times,
                 verbose=args.verbose,
                 output=args.output

@@ -90,6 +90,9 @@ cbc            2        2          48.15ms
 | GLPK | swiglpk | ✅ Siempre disponible |
 | CBC | pulp | ✅ Siempre disponible |
 | Gurobi | gurobipy | ⚠️ Requiere licencia |
+| SCIP | pyscipopt | ⚠️ Requiere instalacion |
+
+**Nota**: SCIP soporta programacion lineal y entera (MILP).
 
 ## Resolución Simple
 
@@ -189,6 +192,65 @@ python main.py problema.txt --solver highs
 # Todo junto
 python main.py problema.txt --visualize --pdf --times
 ```
+
+## Múltiples Problemas
+
+El sistema soporta resolver múltiples problemas desde un solo archivo usando delimitadores (`---`, `===`, `___`).
+
+### Archivo Multi-Problema
+```
+max: x + 2y
+x + y <= 10
+x >= 0; y >= 0
+
+---
+
+min: 3x + y
+x - y >= 5
+x >= 0; y >= 0
+```
+
+### Comandos Multi-Problema
+```bash
+# Resolver múltiples problemas
+python -m src.cli.solve data/problem.txt --multi --solvers gurobi cbc --pdf
+
+# Benchmark de múltiples problemas
+python -m src.cli.benchmark data/problem.txt data/milp_example.txt --pdf
+```
+
+### Reporte Multi-Problema
+El reporte incluye:
+1. **Portada** con estadísticas generales
+2. **Resumen ejecutivo** con tabla de resultados
+3. **Página individual** por problema (función objetivo, restricciones, solución, holguras, gráfico)
+4. **Resumen de tiempos** por problema
+
+Referencia: `data/comandos_reportes.md` para más ejemplos.
+
+## MILP (Programación Lineal Entera)
+
+El sistema soporta variables enteras (`int`, `integer`) y binarias (`bin`, `binary`).
+
+### Ejemplo MILP
+```
+max: 3000x + 5000y
+
+2x + 3y <= 120
+x + 3y <= 90
+
+x int          # Variable entera
+y binary       # Variable binaria (0 o 1)
+
+x >= 0; y >= 0
+```
+
+### Resolver con Gurobi (soporta MILP)
+```bash
+python -m src.cli.solve data/milp_example.txt --pdf --solver gurobi
+```
+
+---
 
 ## Entendiendo los Resultados
 

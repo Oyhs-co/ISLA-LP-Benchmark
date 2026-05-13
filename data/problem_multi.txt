@@ -1,30 +1,231 @@
-# Problema 1: Maximización
-
+# Problema 1: Maximizacion basica
+ 
 max Z = -x + 4y
-
+ 
 # restricciones
-
+ 
 -3x + y <= 6
 x + 2y <= 4
-
+ 
 # bounds
-
+ 
 x free
 y >= -3
-
+ 
 ---
-
-# Problema 2: Maximización
-
-max Z = 3x + 5y
-
+ 
+# Problema 2: Produccion con 3 variables
+ 
+max Z = 3x + 5y + 2z
+ 
 # restricciones
-
-x <= 4
-2y <= 12
-3x + 2y = 18
-
+ 
+x + y + z <= 100
+2x + y <= 80
+y + 3z <= 90
+x + z <= 70
+ 
 # bounds
-
+ 
 x >= 0
 y >= 0
+z >= 0
+ 
+---
+ 
+# Problema 3: Minimizacion con muchas restricciones
+ 
+min Z = 5x + 4y + 3z + 2w
+ 
+# restricciones
+ 
+x + y >= 10
+x + z >= 8
+y + w >= 12
+2x + y + z <= 50
+x + 3y + 2w <= 60
+3z + w <= 40
+x + y + z + w >= 20
+ 
+# bounds
+ 
+x >= 0
+y >= 0
+z >= 0
+w >= 0
+ 
+---
+ 
+# Problema 4: Transporte con 5 variables
+ 
+max Z = 2x1 + 3x2 + 4x3 + 5x4 + 6x5
+ 
+# restricciones
+ 
+x1 + x2 + x3 <= 200
+x3 + x4 + x5 <= 300
+2x1 + x2 <= 150
+x4 + 3x5 <= 250
+x1 + x5 <= 100
+x2 + x3 + x4 <= 180
+ 
+# bounds
+ 
+x1 >= 0
+x2 >= 0
+x3 >= 0
+x4 >= 0
+x5 >= 0
+ 
+---
+ 
+# Problema 5: Dieta con 4 variables y muchas restricciones
+ 
+min Z = 5x1 + 8x2 + 3x3 + 6x4
+ 
+# restricciones
+ 
+x1 + x2 >= 10
+x2 + x3 >= 8
+x3 + x4 >= 6
+x1 + x4 >= 8
+2x1 + x2 + x3 <= 30
+x2 + 2x3 + x4 <= 35
+3x1 + x3 + x4 <= 40
+x1 + x2 + x3 + x4 >= 20
+x1 + 2x2 + 3x3 + x4 <= 50
+ 
+# bounds
+ 
+x1 >= 0
+x2 >= 0
+x3 >= 0
+x4 >= 0
+ 
+---
+ 
+# Problema 6: Inversion con 6 variables
+ 
+max Z = 10x1 + 15x2 + 20x3 + 12x4 + 18x5 + 25x6
+ 
+# restricciones
+ 
+x1 + x2 + x3 + x4 + x5 + x6 <= 1000
+2x1 + x2 + 3x3 + x4 + 2x5 + 4x6 <= 2000
+x1 + 2x2 + x3 + 3x4 + x5 + 2x6 <= 1800
+3x1 + x2 + 2x3 + x4 + 3x5 + x6 <= 2200
+x1 + x3 + x5 <= 600
+x2 + x4 + x6 <= 700
+ 
+# bounds
+ 
+x1 >= 0
+x2 >= 0
+x3 >= 0
+x4 >= 0
+x5 >= 0
+x6 >= 0
+ 
+---
+ 
+# Problema 7: Mezcla con 5 variables
+ 
+min Z = 7x1 + 9x2 + 6x3 + 8x4 + 10x5
+ 
+# restricciones
+ 
+2x1 + x2 + 3x3 + x4 + 2x5 >= 100
+x1 + 3x2 + x3 + 2x4 + x5 >= 80
+x2 + 2x3 + 3x4 + x5 >= 90
+3x1 + x2 + x3 + 2x4 + 3x5 >= 120
+x1 + x2 + x3 + x4 + x5 <= 200
+2x1 + 3x2 + x3 + x4 + x5 >= 70
+x1 + 2x2 + 3x3 + 2x4 + x5 <= 180
+ 
+# bounds
+ 
+x1 >= 0
+x2 >= 0
+x3 >= 0
+x4 >= 0
+x5 >= 0
+ 
+---
+ 
+# Problema 8: Asignacion con 4 variables
+ 
+max Z = 12x + 15y + 10z + 8w
+ 
+# restricciones
+ 
+x + y <= 50
+y + z <= 60
+z + w <= 70
+x + w <= 40
+2x + y + z <= 100
+x + 2y + z + w <= 120
+x + y + 2z + w <= 110
+x + y + z + 2w <= 90
+ 
+# bounds
+ 
+x >= 0
+y >= 0
+z >= 0
+w >= 0
+ 
+---
+ 
+# Problema 9: Granja con 7 variables
+ 
+max Z = 100x1 + 150x2 + 120x3 + 80x4 + 200x5 + 90x6 + 110x7
+ 
+# restricciones
+ 
+x1 + x2 + x3 + x4 <= 500
+x3 + x4 + x5 + x6 <= 400
+x1 + x5 + x6 + x7 <= 300
+2x2 + x3 + x5 <= 350
+x1 + 3x2 + 2x4 + x7 <= 600
+x3 + x4 + 2x5 + x6 + x7 <= 450
+x1 + x2 + x3 + x4 + x5 + x6 + x7 <= 800
+x1 + x3 + x5 + x7 <= 350
+ 
+# bounds
+ 
+x1 >= 0
+x2 >= 0
+x3 >= 0
+x4 >= 0
+x5 >= 0
+x6 >= 0
+x7 >= 0
+ 
+---
+ 
+# Problema 10: Logistica con 6 variables y muchas restricciones
+ 
+min Z = 15x1 + 20x2 + 12x3 + 18x4 + 25x5 + 30x6
+ 
+# restricciones
+ 
+x1 + x2 + x3 >= 100
+x3 + x4 + x5 >= 150
+x5 + x6 >= 80
+2x1 + x2 + x4 <= 300
+x2 + 3x3 + x5 <= 250
+x1 + x4 + 2x5 + x6 <= 280
+x1 + x2 + x3 + x4 + x5 + x6 = 400
+2x1 + x2 + 3x3 + x4 + x5 <= 500
+x1 + 2x2 + x3 + 2x4 + 3x5 + x6 <= 600
+x1 + x3 + x5 + x6 >= 200
+x2 + x4 + x5 + x6 >= 180
+ 
+# bounds
+ 
+x1 >= 0
+x2 >= 0
+x3 >= 0
+x4 >= 0
+x5 >= 0
+x6 >= 0

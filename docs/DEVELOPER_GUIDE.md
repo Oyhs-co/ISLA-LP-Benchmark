@@ -160,6 +160,21 @@ class MiSolver(BaseSolver):
         return SolverStats(iterations=2, nodes=0)
 ```
 
+### Registro de SCIP
+
+```python
+from src.solver import SolverRegistry
+
+# Verificar si SCIP está disponible
+registry = SolverRegistry()
+info = registry.list_all_info()
+print(info.get('scip', {}).get('available', False))
+
+# SCIP soporta MILP (integer, binary)
+from src.solver import SCIPSolver
+help(SCIPSolver)
+```
+
 ## APIs Principales
 
 ### LinearProblem
@@ -225,6 +240,74 @@ runner.results.append(BenchmarkResult(
 runner.export_csv(Path("results.csv"))
 runner.export_json(Path("results.json"))
 ```
+
+## Verificación de Soluciones
+
+### verify_solution()
+
+```python
+from src.core.verification import verify_solution, compare_solutions
+from src.core import LinearProblem, Solution
+
+# Verificar una solución
+is_valid, issues = verify_solution(problem, solution)
+if not is_valid:
+    print("Problemas encontrados:")
+    for issue in issues:
+        print(f"  - {issue}")
+
+# Comparar soluciones de múltiples solvers
+solutions = [gurobi_sol, highs_sol, glpk_sol]
+warnings = compare_solutions(problem, solutions)
+for warning in warnings:
+    print(f"ADVERTENCIA: {warning}")
+```
+
+**Tolerancias**: Usa `FEASIBILITY_TOLERANCE` (1e-6) por defecto.
+
+## Exportación Avanzada
+
+### ResultsExporter
+
+```python
+from src.analysis.benchmark_results import ResultsExporter, export_benchmark_results
+from pathlib import Path
+
+# Usando ResultsExporter
+exporter = ResultsExporter(runner)
+exporter.to_markdown(Path("report.md"))
+exporter.to_html(Path("report.html"), include_plots=True, plots_dir=Path("plots"))
+
+# Método rápido (recomendado)
+paths = export_benchmark_results(
+    runner=runner,
+    output_dir=Path("data/benchmark_output"),
+    formats=["json", "csv", "md", "html"],
+    include_plots=True
+)
+# Retorna: {"json": Path(...), "csv": Path(...), "md": Path(...), "html": Path(...)}
+```
+
+## Análisis Multi-Problema
+
+### MultiLPAnalysis
+
+```python
+from src.analysis.multi_analysis import MultiLPAnalysis
+from src.solver import MultiSolverResult
+
+# results: MultiSolverResult
+analysis = MultiLPAnalysis(results)
+analysis.generate_pdf("output/multi_report.pdf")
+```
+
+**Secciones del reporte**:
+1. Portada con estadísticas
+2. Resumen ejecutivo
+3. Página individual por problema
+4. Resumen de tiempos
+
+---
 
 ## Extensiones
 

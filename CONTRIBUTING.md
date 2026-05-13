@@ -36,7 +36,7 @@ pre-commit install
 
 ## Estándares de Código
 
-- **Lenguaje**: Python 3.14+
+- **Lenguaje**: Python 3.12+
 - **Docstrings**: Español (estándar del proyecto)
 - **Type hints**: Requerido para código nuevo
 - **Formato**: Seguir estilo existente

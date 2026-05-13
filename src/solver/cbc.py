@@ -47,6 +47,8 @@ class CBCSolver(BaseSolver):
         sense = LpMaximize if problem.sense.lower() == "max" else LpMinimize
         prob = LpProblem("LP", sense)
         
+        # F3-12: MILP support - variable types
+        var_types = problem.variable_types if problem.variable_types else {}
         variables = {}
         for var in problem.variables:
             bound = problem.bounds.get(var)
@@ -60,7 +62,14 @@ class CBCSolver(BaseSolver):
                 if bound.upper is not None:
                     ub = bound.upper
             
-            variables[var] = LpVariable(var, lowBound=lb, upBound=ub, cat=LpContinuous)
+            # Set variable type (F3-12)
+            vtype = var_types.get(var, "continuous")
+            if vtype == "integer":
+                variables[var] = LpVariable(var, lowBound=lb, upBound=ub, cat=LpInteger)
+            elif vtype == "binary":
+                variables[var] = LpVariable(var, lowBound=lb, upBound=ub, cat=LpBinary)
+            else:
+                variables[var] = LpVariable(var, lowBound=lb, upBound=ub, cat=LpContinuous)
         
         terms = []
         for var in problem.variables:
@@ -100,7 +109,16 @@ class CBCSolver(BaseSolver):
         try:
             prob = self._build_problem(self.problem)
             
-            solver = pulp.PULP_CBC_CMD(msg=self.config.verbose)
+            # F3-12, F3-16: CBC solver options
+            solver_options = []
+            if self.config.mip_gap is not None:
+                solver_options.append(("ratioGap", self.config.mip_gap))
+            if self.config.time_limit is not None:
+                solver_options.append(("sec", self.config.time_limit))
+            if self.config.threads is not None:
+                solver_options.append(("threads", self.config.threads))
+            
+            solver = pulp.PULP_CBC_CMD(msg=self.config.verbose, options=solver_options)
             
             prob.solve(solver)
             
@@ -116,6 +134,8 @@ class CBCSolver(BaseSolver):
             status = status_map.get(LpStatus[prob.status], str(prob.status))
             
             variables = {}
+            dual_values = {}
+            reduced_costs = {}
             obj_value = None
             
             if status == "OPTIMAL":
@@ -128,11 +148,24 @@ class CBCSolver(BaseSolver):
                     self._iterations = getattr(prob.solver, 'iterations', 0) or 0
                 except:
                     self._iterations = 0
+                
+                # Try to get dual values and reduced costs
+                try:
+                    for constr in prob.constraints.values():
+                        if hasattr(constr, 'pi'):
+                            dual_values[constr.name] = constr.pi
+                    for var in prob.variables():
+                        if hasattr(var, 'dj'):
+                            reduced_costs[var.name] = var.dj
+                except:
+                    pass
             
             self._solution = Solution(
                 status=status,
                 objective_value=obj_value,
                 variables=variables,
+                dual_values=dual_values if dual_values else None,
+                reduced_costs=reduced_costs if reduced_costs else None,
             )
             
             return self._solution

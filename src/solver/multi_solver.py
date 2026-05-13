@@ -34,6 +34,7 @@ class MultiSolverResult:
     total_solve_time: float = 0.0
     total_time: float = 0.0
     verbose: bool = False
+    solver_name: str = "unknown"  # Track which solver was used
 
     def get_successful_results(self) -> List[ProblemResult]:
         """Return only successful results."""

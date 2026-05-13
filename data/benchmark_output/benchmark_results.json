@@ -1,0 +1,302 @@
+{
+  "summary": {
+    "total_benchmarks": 10,
+    "successful": 10,
+    "failed": 0,
+    "by_solver": {
+      "gurobi": {
+        "runs": 10,
+        "avg_time": 0.20487216003239156,
+        "min_time": 0.17451620008796453,
+        "max_time": 0.2541372000705451,
+        "total_time": 2.0487216003239155,
+        "successful": 10,
+        "avg_memory": 0.61640625,
+        "peak_memory": 132.95703125,
+        "total_iterations": 47,
+        "total_nodes": 0,
+        "std_time": 0.0277751615297868
+      }
+    },
+    "by_problem": {
+      "Problema_1": {
+        "runs": 1,
+        "solved_by": [
+          "gurobi"
+        ]
+      },
+      "Problema_2": {
+        "runs": 1,
+        "solved_by": [
+          "gurobi"
+        ]
+      },
+      "Problema_3": {
+        "runs": 1,
+        "solved_by": [
+          "gurobi"
+        ]
+      },
+      "Problema_4": {
+        "runs": 1,
+        "solved_by": [
+          "gurobi"
+        ]
+      },
+      "Problema_5": {
+        "runs": 1,
+        "solved_by": [
+          "gurobi"
+        ]
+      },
+      "Problema_6": {
+        "runs": 1,
+        "solved_by": [
+          "gurobi"
+        ]
+      },
+      "Problema_7": {
+        "runs": 1,
+        "solved_by": [
+          "gurobi"
+        ]
+      },
+      "Problema_8": {
+        "runs": 1,
+        "solved_by": [
+          "gurobi"
+        ]
+      },
+      "Problema_9": {
+        "runs": 1,
+        "solved_by": [
+          "gurobi"
+        ]
+      },
+      "Problema_10": {
+        "runs": 1,
+        "solved_by": [
+          "gurobi"
+        ]
+      }
+    }
+  },
+  "results": [
+    {
+      "solver_name": "gurobi",
+      "problem_name": "Problema_1",
+      "status": "OPTIMAL",
+      "objective_value": 8.0,
+      "variables": {
+        "x": 0.0,
+        "y": 2.0
+      },
+      "parse_time": 0.00019990000873804092,
+      "build_time": 0.010656099999323487,
+      "solve_time": 0.009330200031399727,
+      "total_time": 0.2541372000705451,
+      "memory_used_mb": 5.8203125,
+      "peak_memory_mb": 132.4765625,
+      "iterations": 1,
+      "nodes": 0,
+      "error": null
+    },
+    {
+      "solver_name": "gurobi",
+      "problem_name": "Problema_2",
+      "status": "OPTIMAL",
+      "objective_value": 406.6666666666667,
+      "variables": {
+        "x": 0.0,
+        "y": 80.0,
+        "z": 3.3333333333333335
+      },
+      "parse_time": 0.00027270009741187096,
+      "build_time": 0.0002853998448699713,
+      "solve_time": 0.005791100207716227,
+      "total_time": 0.22089049988426268,
+      "memory_used_mb": 0.15234375,
+      "peak_memory_mb": 132.6953125,
+      "iterations": 3,
+      "nodes": 0,
+      "error": null
+    },
+    {
+      "solver_name": "gurobi",
+      "problem_name": "Problema_3",
+      "status": "OPTIMAL",
+      "objective_value": 68.0,
+      "variables": {
+        "w": 2.0,
+        "x": 0.0,
+        "y": 10.0,
+        "z": 8.0
+      },
+      "parse_time": 0.00039350008592009544,
+      "build_time": 0.00034510018303990364,
+      "solve_time": 0.011022299993783236,
+      "total_time": 0.18957530008628964,
+      "memory_used_mb": 0.01171875,
+      "peak_memory_mb": 132.7109375,
+      "iterations": 3,
+      "nodes": 0,
+      "error": null
+    },
+    {
+      "solver_name": "gurobi",
+      "problem_name": "Problema_4",
+      "status": "OPTIMAL",
+      "objective_value": 1253.3333333333335,
+      "variables": {
+        "x1": 16.66666666666667,
+        "x2": 0.0,
+        "x3": 180.0,
+        "x4": 0.0,
+        "x5": 83.33333333333333
+      },
+      "parse_time": 0.00041099986992776394,
+      "build_time": 0.00020919996313750744,
+      "solve_time": 0.009289099834859371,
+      "total_time": 0.17451620008796453,
+      "memory_used_mb": 0.0234375,
+      "peak_memory_mb": 132.74609375,
+      "iterations": 9,
+      "nodes": 0,
+      "error": null
+    },
+    {
+      "solver_name": "gurobi",
+      "problem_name": "Problema_5",
+      "status": "OPTIMAL",
+      "objective_value": 80.0,
+      "variables": {
+        "x1": 10.0,
+        "x2": 0.0,
+        "x3": 10.0,
+        "x4": 0.0
+      },
+      "parse_time": 0.0008419998921453953,
+      "build_time": 0.00259719998575747,
+      "solve_time": 0.018056200118735433,
+      "total_time": 0.2494985000230372,
+      "memory_used_mb": 0.01171875,
+      "peak_memory_mb": 132.7734375,
+      "iterations": 2,
+      "nodes": 0,
+      "error": null
+    },
+    {
+      "solver_name": "gurobi",
+      "problem_name": "Problema_6",
+      "status": "OPTIMAL",
+      "objective_value": 18233.333333333332,
+      "variables": {
+        "x1": 0.0,
+        "x2": 466.6666666666667,
+        "x3": 0.0,
+        "x4": 0.0,
+        "x5": 299.99999999999994,
+        "x6": 233.33333333333331
+      },
+      "parse_time": 0.0007982999086380005,
+      "build_time": 0.0006677000783383846,
+      "solve_time": 0.007855799980461597,
+      "total_time": 0.2186973001807928,
+      "memory_used_mb": 0.09375,
+      "peak_memory_mb": 132.875,
+      "iterations": 3,
+      "nodes": 0,
+      "error": null
+    },
+    {
+      "solver_name": "gurobi",
+      "problem_name": "Problema_7",
+      "status": "OPTIMAL",
+      "objective_value": 403.0769230769231,
+      "variables": {
+        "x1": 21.153846153846157,
+        "x2": 1.1538461538461513,
+        "x3": 11.538461538461538,
+        "x4": 21.923076923076923,
+        "x5": 0.0
+      },
+      "parse_time": 0.0004102000966668129,
+      "build_time": 0.00029099988751113415,
+      "solve_time": 0.011166400043293834,
+      "total_time": 0.18427710002288222,
+      "memory_used_mb": 0.00390625,
+      "peak_memory_mb": 132.8828125,
+      "iterations": 4,
+      "nodes": 0,
+      "error": null
+    },
+    {
+      "solver_name": "gurobi",
+      "problem_name": "Problema_8",
+      "status": "OPTIMAL",
+      "objective_value": 1020.0,
+      "variables": {
+        "w": 6.666666666666667,
+        "x": 16.666666666666668,
+        "y": 33.33333333333333,
+        "z": 26.66666666666667
+      },
+      "parse_time": 0.0003613999579101801,
+      "build_time": 0.00029610004276037216,
+      "solve_time": 0.0099373001139611,
+      "total_time": 0.1884190000128001,
+      "memory_used_mb": 0.01171875,
+      "peak_memory_mb": 132.8984375,
+      "iterations": 4,
+      "nodes": 0,
+      "error": null
+    },
+    {
+      "solver_name": "gurobi",
+      "problem_name": "Problema_9",
+      "status": "OPTIMAL",
+      "objective_value": 71730.76923076923,
+      "variables": {
+        "x1": 153.84615384615384,
+        "x2": 76.92307692307692,
+        "x3": 146.15384615384616,
+        "x4": 107.69230769230768,
+        "x5": 50.0,
+        "x6": 96.15384615384616,
+        "x7": 0.0
+      },
+      "parse_time": 0.001016699941828847,
+      "build_time": 0.0002772998996078968,
+      "solve_time": 0.01149989990517497,
+      "total_time": 0.17552089993841946,
+      "memory_used_mb": 0.0078125,
+      "peak_memory_mb": 132.91796875,
+      "iterations": 8,
+      "nodes": 0,
+      "error": null
+    },
+    {
+      "solver_name": "gurobi",
+      "problem_name": "Problema_10",
+      "status": "OPTIMAL",
+      "objective_value": 7790.0,
+      "variables": {
+        "x1": 50.00000000000001,
+        "x2": 55.0,
+        "x3": 65.0,
+        "x4": 145.0,
+        "x5": 0.0,
+        "x6": 85.00000000000001
+      },
+      "parse_time": 0.0003280998207628727,
+      "build_time": 0.0002506000455468893,
+      "solve_time": 0.012286199955269694,
+      "total_time": 0.19318960001692176,
+      "memory_used_mb": 0.02734375,
+      "peak_memory_mb": 132.95703125,
+      "iterations": 10,
+      "nodes": 0,
+      "error": null
+    }
+  ]
+}

@@ -60,17 +60,18 @@ class ReporteAcademicoMulti(FPDF):
         self.set_draw_color(*COLOR_PRIMARY)
         self.set_line_width(0.3)
         self.line(MARGIN, self.get_y(), PAGE_WIDTH - MARGIN, self.get_y())
-
+        
         self.ln(3)
-
+        
         # Texto del pie
         self.set_font('Helvetica', 'I', 8)
         self.set_text_color(128, 128, 128)
-
-        # Nombre del reporte
-        self.cell(0, 5, "Solucion de Programas Lineales - Gurobi",
+        
+        # Nombre del reporte - use solver name from MultiLPAnalysis
+        solver_name = getattr(self, '_solver_name', 'Multi-Solver')
+        self.cell(0, 5, f"Solucion de Programas Lineales - {solver_name}",
                   align=Align.C, new_y=YPos.NEXT)
-
+        
         # Numero de pagina
         self.cell(0, 5, f"Pagina {self.page_no()}", align=Align.C)
 
@@ -89,14 +90,17 @@ class MultiLPAnalysis:
     def generate_pdf(self, output_path: str) -> None:
         """
         Genera un reporte academico completo para multiples problemas.
-
+        
         Args:
             output_path: Ruta donde se guardara el PDF.
         """
         pdf = ReporteAcademicoMulti()
         pdf.set_margins(MARGIN, MARGIN, MARGIN)
         pdf.set_auto_page_break(auto=True, margin=15)
-
+        
+        # Store solver_name in PDF object for footer/header
+        pdf._solver_name = getattr(self.results, 'solver_name', 'Multi-Solver')
+        
         # Portada
         pdf.add_page()
         self.page_count += 1
@@ -159,7 +163,24 @@ class MultiLPAnalysis:
         # Informacion de version
         pdf.set_font('Helvetica', '', 10)
         pdf.set_text_color(100, 100, 100)
-        pdf.cell(0, 7, f"Optimizador: Gurobi", align=Align.C,
+        
+        # Get solver name from results
+        solver_name = "Multi-Solver"
+        if self.results.results:
+            # Try to get solver name from the first result's problem or solution
+            first_result = self.results.results[0]
+            if hasattr(first_result, 'solver_name'):
+                solver_name = first_result.solver_name
+            elif hasattr(first_result.problem, 'solver_name'):
+                solver_name = first_result.problem.solver_name
+        
+        pdf.cell(0, 7, f"Optimizador: {solver_name}", align=Align.C,
+                 new_y=YPos.NEXT)
+        pdf.ln(4)
+        pdf.cell(0, 7, f"Python: {sys.version.split()[0]}", align=Align.C,
+                 new_y=YPos.NEXT)
+        pdf.ln(4)
+        pdf.cell(0, 7, f"Plataforma: {platform.system()} {platform.release()}", align=Align.C,
                  new_y=YPos.NEXT)
         pdf.ln(4)
         pdf.cell(0, 7, f"Python: {sys.version.split()[0]}", align=Align.C,

@@ -1,13 +1,13 @@
 [project]
 name = "isla-lp-benchmark"
-version = "1.0.0"
+version = "1.1.0"
 description = "LP Benchmarking Platform - Compare multiple Linear Programming solvers"
 authors = [
     {name = "Oyhs-co",email = "oyhsotelo@gmail.com"}
 ]
 license = {text = "MIT License"}
 readme = "README.md"
-requires-python = ">=3.14,<4"
+requires-python = ">=3.12,<4"
 dependencies = [
     "gurobipy (>=13.0.1,<14.0.0)",
     "polars (>=1.39.0,<2.0.0)",
@@ -19,6 +19,7 @@ dependencies = [
     "highspy (>=1.14.0,<2.0.0)",
     "swiglpk (>=5.0.13,<6.0.0)",
     "pulp (>=3.3.0,<4.0.0)",
+    "pyscipopt (>=6.1.0,<7.0.0)",
 ]
 
 [tool.poetry]

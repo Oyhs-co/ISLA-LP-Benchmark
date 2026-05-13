@@ -1,4 +1,4 @@
-# ISLA LP Benchmark v1.0.0
+# ISLA LP Benchmark v1.1.0
 
 ## Resumen del Proyecto
 
@@ -172,26 +172,27 @@ flowchart LR
 ### 2.3 Flujo de Benchmark
 
 ```mermaid
-flowchart TB
-    START["Inicio Benchmark"] --> CONFIG["BenchmarkConfig"]
-    CONFIG --> WARMUP{"Iteracion de Warmup"}
-    WARMUP -->|"Si"| RUN1["Ejecutar Solver (warmup)"]
-    RUN1 --> WARMUP
+flowchart TD
+    A[Inicio Benchmark] --> B[Configurar Benchmark]
+    B --> C{Iteracion de Warmup}
+    C -->|Si| D[Ejecutar Solver warmup]
+    D --> C
     
-    WARMUP -->|"No, iniciar benchmark"| PROBLEM[{"Para cada problema"}]
-    PROBLEM -->|"Para cada solver"| SOLVER[{"Obtener clase solver"}]
-    SOLVER --> INSTANCE["Crear instancia"]
-    INSTANCE --> SET["set_problem()"]
-    SET --> RUN["solver.solve()"]
-    RUN --> STATS["Obtener SolverStats"]
-    STATS --> RESULT["BenchmarkResult"]
-    RESULT --> COLLECT{"Recolectar metricas"}
+    C -->|No| E[Para cada problema]
+    E --> F[Para cada solver]
+    F --> G[Obtener clase solver]
+    G --> H[Crear instancia]
+    H --> I[set_problem]
+    I --> J[solver.solve]
+    J --> K[Obtener SolverStats]
+    K --> L[BenchmarkResult]
+    L --> M[Recolectar metricas]
     
-    COLLECT -->|"Para cada repeticion"| PROBLEM
-    COLLECT -->|"Fin repeticiones"| SUMMARY["get_summary()"]
-    SUMMARY --> EXPORT["Exportar CSV/JSON"]
-    EXPORT --> PRINT["print_summary()"]
-    PRINT --> END["Fin Benchmark"]
+    M -->|Para cada repeticion| E
+    M -->|Fin repeticiones| N[get_summary]
+    N --> O[Exportar resultados]
+    O --> P[print_summary]
+    P --> Q[Fin Benchmark]
 ```
 
 ### 2.4 Diagrama de Estados del Solver
@@ -247,6 +248,25 @@ stateDiagram-v2
 
 ---
 
+### 2.7 Constantes Centralizadas (constants.py)
+
+El módulo `src/core/constants.py` define tolerancias numéricas centralizadas para asegurar consistencia en todo el código.
+
+**Constantes disponibles**:
+
+| Constante | Valor | Descripción |
+|-----------|-------|-------------|
+| FEASIBILITY_TOLERANCE | 1e-6 | Tolerancia para verificación de factibilidad |
+| OPTIMALITY_TOLERANCE | 1e-6 | Tolerancia para verificación de optimalidad |
+| BOUND_TOLERANCE | 1e-9 | Tolerancia para verificación de límites |
+| PARSING_TOLERANCE | 1e-10 | Tolerancia para comparaciones numéricas en parsing |
+| DEFAULT_INFINITY | 1e30 | Valor predeterminado para infinito |
+| HIGHS_INFINITY | 1e30 | Infinito para HiGHS |
+| GLPK_INFINITY | 1e30 | Infinito para GLPK |
+| CBC_INFINITY | 1e30 | Infinito para CBC |
+
+---
+
 ## 3. Solvers Disponibles
 
 ### 3.1 Resumen de Solvers
@@ -257,6 +277,7 @@ stateDiagram-v2
 | **GLPK** | swiglpk | Native | Siempre disponible | GNU Linear Programming Kit |
 | **CBC** | pulp | Wrapper | Siempre disponible | COIN-OR Branch and Cut |
 | **Gurobi** | gurobipy | Wrapper | Requiere licencia | Optimizador comercial lider |
+| **SCIP** | pyscipopt | Native | Requiere instalacion | Framework de optimizacion (MILP) |
 
 ### 3.2 Arquitectura de Solvers
 
@@ -291,8 +312,11 @@ flowchart TB
 | HiGHS | solver/highs_solver.py | HiGHSSolver | Activo | API nativa, alto rendimiento |
 | GLPK | solver/glpk_solver.py | GLPKSolver | Activo | API nativa, GNU GPL |
 | CBC | solver/cbc.py | CBCSolver | Activo | Wrapper PuLP, COIN-OR |
+| SCIP | solver/scip.py | SCIPSolver | Activo | MILP, PySCIPOpt, FOSS |
 
 ### 3.4 Metodos de Configuracion
+
+#### Configuracion Base (BaseSolver.Config)
 
 | Parametro | Descripcion | Valores |
 |----------|-------------|---------|
@@ -301,6 +325,16 @@ flowchart TB
 | threads | Numero de hilos | 0=automatico, N=hilos |
 | mip_gap | Tolerancia gap MIP | float (0-1) |
 | presolve | Nivel de presolve | -1=auto, 0=off, 1=conservative |
+
+#### Parametros SCIP (F4-2)
+
+| Parametro SCIP | Equivalente Config | Descripcion |
+|---------------|-------------------|-------------|
+| `limits/time` | time_limit | Limite de tiempo |
+| `limits/gap` | mip_gap | Tolerancia gap MIP |
+| `parallel/maxnthreads` | threads | Numero de hilos |
+| `limits/nodes` | - | Limite de nodos (solo SCIP) |
+| `limits/sollimit` | - | Limite de soluciones (solo SCIP) |
 
 ### 3.5 Listar Solvers Disponibles
 
@@ -752,6 +786,29 @@ python main.py --benchmark --solvers highs glpk --plot-comparison --pdf
 python main.py --benchmark --solvers highs glpk --output-json results.json
 ```
 
+### 7.9 Exportacion HTML (con graficos)
+
+El sistema puede generar reportes HTML interactivos con graficos embebidos.
+
+```bash
+# Generar HTML con graficos
+python -c "
+from src.analysis.benchmark_results import export_benchmark_results
+from pathlib import Path
+from src.solver import BenchmarkRunner
+
+# Asumiendo que tienes un runner con resultados
+paths = export_benchmark_results(runner, Path('data/benchmark_output'), formats=['html'], include_plots=True)
+print(f'HTML generado: {paths[\"html\"]}')
+"
+```
+
+**Caracteristicas del HTML**:
+- Tabla resumen con estadisticas por solver
+- Tabla detallada de resultados
+- Graficos embebidos (tiempos, tasa de exito, perfil de rendimiento, dashboard)
+- Estilos CSS integrados
+
 ---
 
 ## 8. Formato de Archivos de Problemas
@@ -788,6 +845,20 @@ y <= 50               (limite superior)
 x free                (variable libre, sin limites)
 0 <= x <= 100         (ambos limites simultaneamente)
 ```
+
+### Variables Enteras y Binarias (MILP)
+
+El sistema soporta variables enteras (`int`, `integer`) y binarias (`bin`, `binary`).
+
+Ejemplos:
+```
+x int                # Variable entera
+y binary             # Variable binaria (0 o 1)
+z integer           # Equivalente a int
+w bin               # Equivalente a binary
+```
+
+**Nota**: Los solvers Gurobi, HiGHS, CBC y SCIP soportan MILP. Gurobi es el más completo para este tipo de problemas.
 
 ### Comentarios
 
@@ -1010,6 +1081,9 @@ classDiagram
 | SolverStats | solver/base.py | Estadisticas del solver (iteraciones, nodos, memoria) |
 | SolverRegistry | solver/base.py | Registro dinamico de solvers |
 | Config | solver/base.py | Configuracion base del solver |
+| SCIPSolver | solver/scip.py | Solver SCIP para LP y MILP |
+
+
 
 **Metodos de BaseSolver**:
 
@@ -1050,6 +1124,7 @@ classDiagram
 | HiGHS | solver/highs_solver.py | HiGHSSolver | Native | Activo |
 | GLPK | solver/glpk_solver.py | GLPKSolver | Native | Activo |
 | CBC | solver/cbc.py | CBCSolver | Wrapper (PuLP) | Activo |
+| SCIP | solver/scip.py | SCIPSolver | Native (PySCIPOpt) | Activo |
 
 **Diagrama de Implementaciones**:
 
@@ -1156,6 +1231,56 @@ sequenceDiagram
 | memory_used_mb | float | Memoria utilizada |
 | peak_memory_mb | float | Pico de memoria |
 | error | Optional[str] | Error si existe |
+
+#### 10.3.5 SCIPSolver (scip.py)
+
+**Proposito**: Solver para programacion lineal y entera usando SCIP (PySCIPOpt).
+
+**Diagrama de Clase**:
+
+```mermaid
+classDiagram
+    class SCIPSolver {
+        <<register_solver("scip")>>
+        +solver_name: str = "scip"
+        +solver_version: str
+        +is_available: bool
+        +solve() Solution
+        +get_stats() SolverStats
+    }
+    
+    BaseSolver <|-- SCIPSolver
+```
+
+**Caracteristicas F4-2 (MILP)**:
+- Soporte para variables `continuous`, `integer`, `binary`
+- Configuracion via `problem.variable_types`
+- Extraccion de dual values y reduced costs
+
+**Metodos Principales**:
+
+| Metodo | Firma | Descripcion |
+|--------|-------|-------------|
+| solve | solve() -> Solution | Resuelve usando SCIP |
+| get_stats | get_stats() -> SolverStats | Obtiene estadisticas |
+
+**Configuracion SCIP**:
+```python
+# Parametros soportados via BaseSolver.Config
+model.setRealParam("limits/time", time_limit)
+model.setRealParam("limits/gap", mip_gap)
+model.setIntParam("parallel/maxnthreads", threads)
+```
+
+**Version**:
+```python
+from src.solver import SolverRegistry
+registry = SolverRegistry()
+info = registry.list_all_info()
+print(info['scip']['version'])  # Ej: "SCIP 8.0.0"
+```
+
+---
 
 ### 10.4 Modulo de Parsing (src/parser/)
 
@@ -1460,6 +1585,55 @@ classDiagram
 | LPSolverError | Error del solver | LPError |
 | LPFormatError | Error de formato | LPError |
 
+#### 10.5.7 Verificacion de Soluciones (verification.py)
+
+**Proposito**: Verifica que las soluciones satisfagan todas las restricciones y limites de variables (F0-3, F6-2).
+
+**Diagrama de Verificacion**:
+
+```mermaid
+flowchart TB
+    SOL["Solution"] --> VERIFY["verify_solution()"]
+    PROB["LinearProblem"] --> VERIFY
+    
+    VERIFY --> BOUNDS["Check variable bounds"]
+    VERIFY --> CONSTRAINTS["Check constraints"]
+    
+    BOUNDS --> RESULT["(is_valid, issues)"]
+    CONSTRAINTS --> RESULT
+```
+
+**Funciones Principales**:
+
+| Funcion | Firma | Descripcion |
+|---------|-------|-------------|
+| verify_solution | verify_solution(problem, solution, tolerance) -> tuple[bool, list[str]] | Verifica solucion contra restricciones y bounds |
+| compare_solutions | compare_solutions(problem, solutions, tolerance) -> list[str] | Compara multiples soluciones del mismo problema |
+
+**Ejemplo de Uso**:
+
+```python
+from src.core.verification import verify_solution, compare_solutions
+from src.core import LinearProblem, Solution
+
+# Verificar una solucion
+is_valid, issues = verify_solution(problem, solution)
+if not is_valid:
+    print("Problemas encontrados:")
+    for issue in issues:
+        print(f"  - {issue}")
+
+# Comparar soluciones de multiples solvers
+solutions = [gurobi_sol, highs_sol, glpk_sol]
+warnings = compare_solutions(problem, solutions)
+for warning in warnings:
+    print(f"ADVERTENCIA: {warning}")
+```
+
+**Tolerancias**: Usa `FEASIBILITY_TOLERANCE` (1e-6) por defecto, configurable via parametro `tolerance`.
+
+---
+
 ### 10.6 Modulo Matrix (src/matrix/)
 
 #### 10.6.1 Flujo de Construccion
@@ -1657,6 +1831,72 @@ flowchart TB
 | _agregar_detalles | _agregar_detalles() -> None | Agrega resultados detallados |
 | _agregar_graficos | _agregar_graficos() -> None | Agrega graficos |
 | _agregar_sistema | _agregar_sistema() -> None | Agrega info del sistema |
+
+#### 10.7.4 MultiLPAnalysis (multi_analysis.py)
+
+**Proposito**: Genera reportes academicos para multiples problemas de LP.
+
+**Clase Principal**: `MultiLPAnalysis`
+
+**Secciones del Reporte**:
+1. Portada con estadisticas generales
+2. Resumen ejecutivo con tabla de resultados
+3. Pagina individual por problema (funcion objetivo, restricciones, solucion, holguras, grafico)
+4. Resumen de tiempos por problema
+
+**Metodos Principales**:
+
+| Metodo | Firma | Descripcion |
+|--------|-------|-------------|
+| generate_pdf | generate_pdf(output_path) -> None | Genera PDF multi-problema |
+| _build_portada | _build_portada(pdf) -> None | Construye portada |
+| _build_resumen | _build_resumen(pdf) -> None | Construye resumen ejecutivo |
+| _build_problema_individual | _build_problema_individual(pdf, result, num) -> None | Pagina por problema |
+| _build_tiempos_resumen | _build_tiempos_resumen(pdf) -> None | Resumen de tiempos |
+
+**Uso**:
+```python
+from src.analysis.multi_analysis import MultiLPAnalysis
+from src.solver import MultiSolverResult
+
+analysis = MultiLPAnalysis(results)  # results: MultiSolverResult
+analysis.generate_pdf("output/multi_report.pdf")
+```
+
+#### 10.7.5 ResultsExporter y export_benchmark_results (benchmark_results.py)
+
+**Proposito**: Exporta resultados de benchmarking a multiples formatos.
+
+**Clase Principal**: `ResultsExporter`
+
+| Metodo | Firma | Descripcion |
+|--------|-------|-------------|
+| to_markdown | to_markdown(path) -> None | Exporta a Markdown |
+| to_html | to_html(path, include_plots, plots_dir) -> None | Exporta a HTML con graficos |
+| to_polars_dataframe | to_polars_dataframe() -> pl.DataFrame | Convierte a Polars DataFrame |
+
+**Funcion Auxiliar**: `export_benchmark_results()`
+
+```python
+from src.analysis.benchmark_results import export_benchmark_results
+from pathlib import Path
+
+paths = export_benchmark_results(
+    runner=runner,
+    output_dir=Path("data/benchmark_output"),
+    formats=["json", "csv", "md", "html"],
+    include_plots=True
+)
+# Retorna: {"json": Path(...), "csv": Path(...), "md": Path(...), "html": Path(...)}
+```
+
+**Formatos Soportados**:
+- **JSON**: `benchmark_results.json`
+- **CSV**: `benchmark_results.csv`
+- **Markdown**: `benchmark_report.md`
+- **HTML**: `benchmark_report.html` (incluye graficos embebidos)
+
+---
 
 ### 10.8 Modulo de Visualizacion (src/visualization/)
 
@@ -2098,6 +2338,40 @@ Conjunto Infactible Irreducible (IIS):
 | Modificar bounds | Cambiar limites de variables |
 | Revisar modelo | Verificar formulacion |
 
+### 13.5 Comparacion Cruzada de Soluciones (F6-2)
+
+El sistema puede comparar soluciones de multiples solvers para detectar discrepancias.
+
+**Funcion**: `compare_solutions()` en `src/core/verification.py`
+
+```python
+from src.core.verification import compare_solutions
+from src.core import Solution
+
+# Lista de soluciones de diferentes solvers
+solutions = [
+    gurobi_solution,   # Solution de Gurobi
+    highs_solution,     # Solution de HiGHS
+    glpk_solution      # Solution de GLPK
+]
+
+# Comparar (mismo problema)
+warnings = compare_solutions(problem, solutions)
+if warnings:
+    print("Discrepancias encontradas:")
+    for warning in warnings:
+        print(f"  - {warning}")
+```
+
+**Que verifica**:
+- Valores objetivos: Alerta si la diferencia supera la tolerancia
+- Usa `FEASIBILITY_TOLERANCE` (1e-6) por defecto
+
+**Salida**:
+```
+ADVERTENCIA: Objective values differ by 0.000012. Range: [190000.000000, 190000.012000]
+```
+
 ---
 
 ## 14. Configuracion del Solucionador
@@ -2507,17 +2781,21 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ## 20. Version
 
-**Version actual: 1.0.0**
+**Version actual: 1.1.0**
 
-### Changelog v1.0.0
+### Changelog v1.1.0
 
 - Plataforma de benchmark multi-solver
-- Solvers: HiGHS (native), GLPK (native), CBC (PuLP), Gurobi
+- Solvers: HiGHS (native), GLPK (native), CBC (PuLP), Gurobi, SCIP (PySCIPOpt)
+- MILP support (integer, binary variables)
 - Metricas: tiempo, iteraciones, memoria, nodos
 - Warmup para fair benchmarking
 - Reportes PDF con graficos comparativos
-- Exportacion: CSV, JSON, Markdown
-- CLI con --list-solvers
+- Exportacion: CSV, JSON, Markdown, HTML
+- CLI con --list-solvers, --benchmark, --solvers
+- Multi-problem parsing con delimiters
+- Verificacion de soluciones (verify_solution, compare_solutions)
+- Constantes centralizadas (constants.py)
 - Docker Alpine
 - Documentacion completa
 

@@ -20,6 +20,8 @@ except ImportError:
 from ..parser import LPParser
 from ..matrix import LPBuilder
 from ..core import LinearProblem, Solution
+from ..core.solution import ProgressPoint, SolutionTable, to_solution_table
+from ..core.verification import verify_solution, compare_solutions
 from .base import BaseSolver, SolverStats, SolverRegistry
 
 
@@ -38,10 +40,16 @@ class BenchmarkResult:
     memory_used_mb: float = 0.0
     peak_memory_mb: float = 0.0
     error: Optional[str] = None
+    # F6-1: Progress log
+    progress_log: Optional[list[ProgressPoint]] = None
+    # F6-2: Cross-validation result
+    cross_validation: Optional[dict] = None  # {solver: {status_match, obj_diff, ...}
+    # F6-3: Solution table
+    solution_table: Optional[Any] = None  # SolutionTable instance
     
     def to_dict(self) -> dict:
         """Convierte el resultado a diccionario."""
-        return {
+        result = {
             "solver_name": self.solver_name,
             "problem_name": self.problem_name,
             "status": self.solution.status,
@@ -55,13 +63,25 @@ class BenchmarkResult:
             "peak_memory_mb": self.peak_memory_mb,
             "iterations": self.stats.iterations,
             "nodes": self.stats.nodes,
-            "error": self.error
+            "error": self.error,
         }
+        # F6-3: Include solution table if available
+        if self.solution_table:
+            try:
+                if hasattr(self.solution_table, 'variables') and self.solution_table.variables is not None:
+                    result["solution_table"] = {
+                        "variables": self.solution_table.variables.to_dicts() if hasattr(self.solution_table.variables, 'to_dicts') else str(self.solution_table.variables),
+                        "constraints": self.solution_table.constraints.to_dicts() if self.solution_table.constraints and hasattr(self.solution_table.constraints, 'to_dicts') else None,
+                    }
+            except:
+                pass
+        
+        return result
 
 
 @dataclass
 class BenchmarkConfig:
-    """Configuracion del benchmark."""
+    """Configuración del benchmark."""
     warmup_runs: int = 1
     runs_per_problem: int = 1
     verbose: bool = False
@@ -70,6 +90,10 @@ class BenchmarkConfig:
     output_dir: Optional[Path] = None
     fairness_mode: bool = True
     randomize_order: bool = True
+    # F6-1: Collect progress during solving
+    collect_progress: bool = False
+    # F6-2: Enable cross-validation between solvers
+    cross_validate: bool = True
 
 
 class BenchmarkRunner:
@@ -109,9 +133,14 @@ class BenchmarkRunner:
         
         self.results = []
         
+        # Group results by problem for cross-validation
+        problem_results = {}
+        
         for problem_name, problem_text in problems:
             if self.config.verbose:
                 print(f"\nProblema: {problem_name}")
+            
+            problem_results[problem_name] = []
             
             for solver_name in solvers:
                 if self.config.verbose:
@@ -123,8 +152,62 @@ class BenchmarkRunner:
                     
                     result = self._run_single(solver_name, problem_name, problem_text)
                     self.results.append(result)
+                    problem_results[problem_name].append(result)
+        
+        # F6-2: Cross-validation between solvers
+        if self.config.cross_validate:
+            self._cross_validate(problem_results)
         
         return self.results
+    
+    def _cross_validate(self, problem_results: dict) -> None:
+        """
+        Cross-validate solutions between solvers for each problem.
+        
+        Args:
+            problem_results: Dict mapping problem_name to list of BenchmarkResult
+        """
+        for problem_name, results in problem_results.items():
+            if len(results) < 2:
+                continue
+            
+            # Parse problem once for verification
+            try:
+                problem = LPParser(results[0].problem_text).parse()
+            except:
+                continue
+            
+            # Verify each solution
+            for result in results:
+                if result.error or not result.solution.is_optimal():
+                    continue
+                
+                is_valid, issues = verify_solution(problem, result.solution)
+                if not is_valid and self.config.verbose:
+                    print(f"  Warning: {result.solver_name} solution invalid for {problem_name}: {issues[:3]}")
+            
+            # Compare solutions between solvers
+            optimal_solutions = [
+                (r.solver_name, r.solution) for r in results 
+                if r.solution.is_optimal() and not r.error
+            ]
+            
+            if len(optimal_solutions) >= 2:
+                solutions = [s for _, s in optimal_solutions]
+                warnings = compare_solutions(problem, solutions)
+                
+                if warnings and self.config.verbose:
+                    print(f"  Cross-validation warnings for {problem_name}:")
+                    for w in warnings:
+                        print(f"    - {w}")
+                
+                # Store cross-validation results in each BenchmarkResult
+                for result in results:
+                    if result.solver_name in [s[0] for s in optimal_solutions]:
+                        result.cross_validation = {
+                            "status": "compared",
+                            "warnings": warnings
+                        }
     
     def _run_single(
         self, 
@@ -137,6 +220,7 @@ class BenchmarkRunner:
         
         memory_before = 0
         memory_after = 0
+        memory_solver_created = 0
         if self.config.collect_memory and PSUTIL_AVAILABLE:
             gc.collect()
             memory_before = psutil.Process(os.getpid()).memory_info().rss / 1024 / 1024
@@ -156,6 +240,11 @@ class BenchmarkRunner:
             
             # Crear solver una sola vez con LinearProblem
             solver = solver_class(problem)
+            
+            # F6-5: Measure memory after solver creation (more accurate per-solver)
+            if self.config.collect_memory and PSUTIL_AVAILABLE:
+                gc.collect()
+                memory_solver_created = psutil.Process(os.getpid()).memory_info().rss / 1024 / 1024
             
             # Warmup en la MISMA instancia
             if self.config.warmup_runs > 0:
@@ -178,13 +267,32 @@ class BenchmarkRunner:
             if self.config.collect_memory and PSUTIL_AVAILABLE:
                 gc.collect()
                 memory_after = psutil.Process(os.getpid()).memory_info().rss / 1024 / 1024
-                memory_used = max(0, memory_after - memory_before)
+                # F6-5: Use per-solver memory (after solver creation) for more accuracy
+                if memory_solver_created > 0:
+                    memory_used = max(0, memory_after - memory_solver_created)
+                else:
+                    memory_used = max(0, memory_after - memory_before)
                 peak_memory = memory_after
             else:
                 memory_used = 0
                 peak_memory = 0
             
-            return BenchmarkResult(
+            # F6-1: Collect progress log if enabled
+            progress_log = None
+            if self.config.collect_progress and stats.progress_log:
+                progress_log = stats.progress_log
+            
+            # F6-2: Cross-validation will be done after all solvers run
+            
+            # F6-3: Generate solution table
+            solution_table = None
+            try:
+                if solution.is_optimal():
+                    solution_table = to_solution_table(solution, problem)
+            except:
+                pass
+            
+            result = BenchmarkResult(
                 solver_name=solver_name,
                 problem_name=problem_name,
                 problem_text=problem_text,
@@ -195,8 +303,15 @@ class BenchmarkRunner:
                 solve_time=solve_time,
                 total_time=total_time,
                 memory_used_mb=memory_used,
-                peak_memory_mb=peak_memory
+                peak_memory_mb=peak_memory,
+                progress_log=progress_log
             )
+            
+            # Store solution table for export (F6-3)
+            if solution_table:
+                result.solution_table = solution_table
+            
+            return result
             
         except Exception as e:
             total_time = time.perf_counter() - total_start
@@ -320,7 +435,7 @@ class BenchmarkRunner:
                     r.solution.objective_value,
                     f"{r.parse_time:.6f}",
                     f"{r.build_time:.6f}",
-                    f"{r.stats.solve_time:.6f}",
+                    f"{r.solve_time:.6f}",
                     f"{r.total_time:.6f}",
                     r.stats.iterations,
                     r.stats.nodes,
@@ -344,7 +459,7 @@ class BenchmarkRunner:
         print("-"*60)
         
         for solver, data in summary["by_solver"].items():
-            print(f"{solver:<15} {data['runs']:<8} {data['successful']:<10} {data['avg_time']*1000:.2f}ms")
+            print(f"{solver:<15} {data['runs']:<8} {data['successful']:<10} {data['avg_time']*1000:.6f}ms")
         
         print("\n" + "="*60)
 

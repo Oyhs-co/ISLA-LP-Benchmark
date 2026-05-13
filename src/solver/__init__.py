@@ -17,10 +17,7 @@ try:
     from .highs_solver import HiGHSSolver
     SolverRegistry.register("highs", HiGHSSolver, available=True)
 except ImportError as e:
-    import sys
     import types
-    # Create a dummy class to avoid import errors
-    dummy = types.ModuleType("highs_solver_dummy")
     class HiGHSSolver:
         pass
     HiGHSSolver.solver_name = "highs"
@@ -56,6 +53,19 @@ except ImportError as e:
     CBCSolver.__name__ = "CBCSolver"
     SolverRegistry.register("cbc", CBCSolver, available=False)
     SolverRegistry.set_unavailable("cbc", f"not available: {e}")
+
+# F4-3: Register SCIP solver
+try:
+    from .scip import SCIPSolver
+    SolverRegistry.register("scip", SCIPSolver, available=True)
+except ImportError as e:
+    import types
+    class SCIPSolver:
+        pass
+    SCIPSolver.solver_name = "scip"
+    SCIPSolver.__name__ = "SCIPSolver"
+    SolverRegistry.register("scip", SCIPSolver, available=False)
+    SolverRegistry.set_unavailable("scip", f"pyscipopt not available: {e}")
 
 __all__ = [
     "BaseSolver",

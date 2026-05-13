@@ -37,51 +37,60 @@ class LPParser:
     def parse(self) -> LinearProblem:
         """
         Parsea el problema de PL desde el texto proporcionado.
-
+        
         Returns:
             LinearProblem: Instancia representando el problema parseado.
-
+        
         Raises:
             ValueError: Si el formato es inválido.
         """
-
+        
         lines = self.txt.strip().splitlines()
         objective_line = lines[0].strip()
-
+        
         if not objective_line:
             raise ValueError("Falta la función objetivo")
-
+        
         sense, objective_coeffs = self._parse_objective(objective_line)
-
+        
         constraints: list[LinearConstraint] = []
-
-        for line in lines[1:]:
+        variable_types: dict[str, str] = {}
+        
+        for i, line in enumerate(lines[1:]):
             line = line.split('#', 1)[0].strip()
             if not line or line.startswith("#"):
                 continue
             if self._could_be_bound(line):
                 self._parse_bound(line)
+                # Collect variable types from bounds
+                for var, bound in self.bounds.items():
+                    if bound.variable_type != "continuous":
+                        variable_types[var] = bound.variable_type
                 continue
             constraint = self._parse_constraint(line.strip())
+            # Assign auto-name if not set
+            if not constraint.name:
+                constraint.name = f"R{i}"
             constraints.append(constraint)
-
+        
         variables = sorted({
             *self._extract_variables(objective_coeffs, constraints),
             *self.bounds.keys()
         })
-
+        
         if not objective_coeffs:
             raise ValueError("La función objetivo no puede estar vacía")
-
+        
         if not constraints:
             raise ValueError("Se requiere al menos una restricción")
-
+        
         return LinearProblem(
             objective=objective_coeffs,
             sense=sense,
             constraints=constraints,
             variables=variables,
-            bounds=self.bounds
+            bounds=self.bounds,
+            variable_types=variable_types
         )
 
     def _parse_objective(self, line: str) -> tuple[str, dict[str, float]]:
@@ -91,10 +100,19 @@ class LPParser:
         if len(parts) != 2:
             raise ValueError(f"Función objetivo inválida: {line}")
 
-        sense = parts[0].replace(":", "").lower()
-
-        if sense not in {"max", "min"}:
-            raise ValueError(f"Dirección de optimización inválida: {sense}")
+        sense = parts[0].replace(":", "").lower().strip()
+        
+        # Manejar variaciones de "max" y "min"
+        sense_clean = sense.replace("imize", "").replace("imizar", "").strip()
+        
+        if sense_clean not in {"max", "min"}:
+            # Buscar coincidencia parcial
+            if "max" in sense.lower():
+                sense = "max"
+            elif "min" in sense.lower():
+                sense = "min"
+            else:
+                raise ValueError(f"Dirección de optimización inválida: {sense}")
 
         expr = parts[1]
 
@@ -196,65 +214,80 @@ class LPParser:
         return False
 
     def _parse_bound(self, line: str) -> None:
-        """Parsea un bound de variable."""
+        """Parsea un bound de variable y detecta tipos (int, binary)."""
+        # Detectar tipo de variable al final de la línea (ej: "x >= 0 integer")
+        line_for_type = line.lower()
+        var_type = "continuous"
+        if " integer" in line_for_type or " int " in line_for_type or line_for_type.endswith(" int") or line_for_type.endswith(" integer"):
+            var_type = "integer"
+            line = line.rsplit(" integer", 1)[0].rsplit(" int", 1)[0]
+        elif " binary" in line_for_type or " bin " in line_for_type or line_for_type.endswith(" bin") or line_for_type.endswith(" binary"):
+            var_type = "binary"
+            line = line.rsplit(" binary", 1)[0].rsplit(" bin", 1)[0]
+        
         free_match = BOUND_FREE.match(line)
-
+        
         if free_match:
             var = free_match.group(1)
             self.bounds[var] = VariableBound(variable=var,
-                                             lower=None,
-                                             upper=None)
+                                              lower=None,
+                                              upper=None,
+                                              variable_type=var_type)
             return
-
+        
         line = line.replace(" ", "")
-
+        
         match = BOUND_DOUBLE.match(line)
-
+        
         if match:
             lower, var, upper = match.groups()
-
+            
             bound = self.bounds.get(var, VariableBound(var))
-
+            
             bound.lower = float(lower)
             bound.upper = float(upper)
-
+            bound.variable_type = var_type
+            
             self.bounds[var] = bound
-
+            
             return
-
+        
         match = BOUND_SIMPLE.match(line)
-
+        
         if match:
             var, op, value = match.groups()
             value = float(value)
-
+            
             bound = self.bounds.get(var, VariableBound(var))
-
+            
             if op == ">=":
                 bound.lower = value
             else:
                 bound.upper = value
-
+            bound.variable_type = var_type
+            
             self.bounds[var] = bound
-
+            
             return
-
+        
         match = BOUND_LEFT.match(line)
-
+        
         if match:
             lower, var = match.groups()
             bound = self.bounds.get(var, VariableBound(var))
             bound.lower = float(lower)
+            bound.variable_type = var_type
             self.bounds[var] = bound
             return
-
+        
         match = BOUND_RIGHT.match(line)
-
+        
         if match:
             var, upper = match.groups()
             bound = self.bounds.get(var, VariableBound(var))
             bound.upper = float(upper)
+            bound.variable_type = var_type
             self.bounds[var] = bound
             return
-
+        
         raise ValueError(f"Formato de bound inválido: {line}")

@@ -170,6 +170,9 @@ class GurobiSolver(BaseSolver):
             all_vars.add(row["variable"])
         all_vars.update(bounds_map.keys())
         
+        # F3-1: Usar variable_types del problema
+        var_types = self.problem.variable_types if self.problem else {}
+        
         for var_name in sorted(all_vars):
             lb, ub = bounds_map.get(var_name, (None, None))
             
@@ -183,8 +186,19 @@ class GurobiSolver(BaseSolver):
                 lb = 0.0 if lb is None else lb
                 ub = GRB.INFINITY if ub is None else ub
             
+            # Determinar tipo de variable (F3-1)
+            vtype_str = var_types.get(var_name, "continuous")
+            if vtype_str == "integer":
+                vtype = GRB.INTEGER
+            elif vtype_str == "binary":
+                vtype = GRB.BINARY
+                lb = lb if lb is not None else 0.0
+                ub = ub if ub is not None else 1.0
+            else:
+                vtype = GRB.CONTINUOUS
+            
             variables[var_name] = self.model.addVar(
-                vtype=GRB.CONTINUOUS,
+                vtype=vtype,
                 lb=lb,
                 ub=ub,
                 name=var_name
@@ -248,7 +262,7 @@ class GurobiSolver(BaseSolver):
             )
     
     def _extract_optimal_solution(self) -> Solution:
-        """Extrae la solucion optima con valores duales y costos reducidos."""
+        """Extrae la solucion optima con valores duales, costos reducidos y sensibilidad."""
         var_values = {}
         reduced_costs = {}
         
@@ -264,6 +278,26 @@ class GurobiSolver(BaseSolver):
             if abs(pi) > 1e-10:
                 dual_values[constr.constrName] = pi
         
+            # F3-2: Sensibilidad (rangos aproximados)
+            sensitivity = None
+            try:
+                from src.analysis.sensitivity import extract_gurobi_sensitivity
+                sensitivity = extract_gurobi_sensitivity(self.model)
+            except Exception:
+                pass  # Sensibilidad no disponible
+        
+        # F3-4: Métricas de calidad numérica
+        numerical_quality = None
+        try:
+            from src.core import NumericalQuality
+            numerical_quality = NumericalQuality(
+                max_bound_viol=getattr(self.model, 'BoundVio', 0.0),
+                max_constraint_viol=getattr(self.model, 'ConstrVio', 0.0),
+                condition_number=getattr(self.model, 'KappaExact', None)
+            )
+        except Exception:
+            pass
+        
         if self.config.verbose:
             self._print_solution(var_values, self.model.objVal)
         
@@ -274,7 +308,11 @@ class GurobiSolver(BaseSolver):
             dual_values=dual_values if dual_values else None,
             reduced_costs=reduced_costs if reduced_costs else None,
             iterations=self.stats.iterations,
-            nodes=self.stats.nodes
+            nodes=self.stats.nodes,
+            # F3-2, F3-3, F3-4: Nuevos campos
+            sensitivity=sensitivity,
+            iis=self.iis_constraints + self.iis_variables if (self.iis_constraints or self.iis_variables) else None,
+            numerical_quality=numerical_quality
         )
     
     def _extract_infeasible_solution(self) -> Solution:

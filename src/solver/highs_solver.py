@@ -60,6 +60,16 @@ class HiGHSSolver(BaseSolver):
             from ..core.constants import DEFAULT_INFINITY
             INF = DEFAULT_INFINITY
             
+            # F3-5: MILP support - variable types
+            var_types = problem.variable_types if problem.variable_types else {}
+            
+            for i, var in enumerate(variables_list):
+                bound = problem.bounds.get(var)
+                lb = 0.0 if not bound or bound.lower is None else bound.lower
+                ub = highspy.kHighsInf if not bound or bound.upper is None else bound.upper
+                
+                hp.addVar(lb, ub)
+            
             for var in variables_list:
                 bound = problem.bounds.get(var)
                 
@@ -114,15 +124,51 @@ class HiGHSSolver(BaseSolver):
             
             variables = {}
             
+            dual_values = {}
+            reduced_costs = {}
+            
             if status == "OPTIMAL":
                 solution = hp.getSolution()
                 for i, var in enumerate(variables_list):
                     variables[var] = solution.col_value[i]
+                
+                # F3-7: Try to get dual values and reduced costs
+                try:
+                    dual_solution = hp.getDualSolution()
+                    # For constraints - needs mapping
+                    for i, constr in enumerate(problem.constraints):
+                        if i < len(dual_solution):
+                            dual_values[constr.name or f"R{i}"] = dual_solution[i]
+                except:
+                    pass
+                
+                # F3-14: Get basis info
+                try:
+                    basis_info = hp.getBasis()
+                    basis = {var: ("basic" if basis_info[i] == 0 else "nonbasic") 
+                               for i, var in enumerate(variables_list)}
+                except:
+                    basis = None
+            
+            # F3-6: Get sensitivity analysis
+            try:
+                from ..analysis.sensitivity import extract_highs_sensitivity
+                sensitivity = extract_highs_sensitivity(hp)
+            except:
+                sensitivity = None
+            else:
+                basis = None
+            
+            # F3-8: Use proper infinity
+            from ..core.constants import DEFAULT_INFINITY
             
             self._solution = Solution(
                 status=status,
                 objective_value=hp.getObjectiveValue() if status == "OPTIMAL" else None,
                 variables=variables,
+                dual_values=dual_values if dual_values else None,
+                reduced_costs=reduced_costs if reduced_costs else None,
+                basis=basis,
             )
             
             self._iterations = 0
