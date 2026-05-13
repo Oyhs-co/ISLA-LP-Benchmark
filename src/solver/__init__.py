@@ -106,6 +106,97 @@ except ImportError as e:
     SolverRegistry.register("cvxopt", CVXOPTSolver, available=False)
     SolverRegistry.set_unavailable("cvxopt", f"cvxopt not available: {e}")
 
+# F7-4: Register SCS solver
+try:
+    from .scs_solver import SCSSolver
+    SolverRegistry.register("scs", SCSSolver, available=True)
+except ImportError as e:
+    import types
+    class SCSSolver:
+        pass
+    SCSSolver.solver_name = "scs"
+    SCSSolver.__name__ = "SCSSolver"
+    SolverRegistry.register("scs", SCSSolver, available=False)
+    SolverRegistry.set_unavailable("scs", f"scs not available: {e}")
+
+# F7-5: Register Ipopt solver
+try:
+    from .ipopt_solver import IpoptSolver
+    SolverRegistry.register("ipopt", IpoptSolver, available=True)
+except ImportError as e:
+    import types
+    class IpoptSolver:
+        pass
+    IpoptSolver.solver_name = "ipopt"
+    IpoptSolver.__name__ = "IpoptSolver"
+    SolverRegistry.register("ipopt", IpoptSolver, available=False)
+    SolverRegistry.set_unavailable("ipopt", f"cyipopt not available: {e}")
+
+# F7-6: Register Alpine solver (via PyOptInterface)
+try:
+    from .alpine_solver import AlpineSolver
+    SolverRegistry.register("alpine", AlpineSolver, available=True)
+except ImportError as e:
+    import types
+    class AlpineSolver:
+        pass
+    AlpineSolver.solver_name = "alpine"
+    AlpineSolver.__name__ = "AlpineSolver"
+    SolverRegistry.register("alpine", AlpineSolver, available=False)
+    SolverRegistry.set_unavailable("alpine", f"pyoptinterface not available: {e}")
+
+# F7-7: Register Bonmin solver (via Pyomo)
+try:
+    from .bonmin_solver import BonminSolver
+    SolverRegistry.register("bonmin", BonminSolver, available=True)
+except ImportError as e:
+    import types
+    class BonminSolver:
+        pass
+    BonminSolver.solver_name = "bonmin"
+    BonminSolver.__name__ = "BonminSolver"
+    SolverRegistry.register("bonmin", BonminSolver, available=False)
+    SolverRegistry.set_unavailable("bonmin", f"pyomo not available: {e}")
+
+# F7-8: Register Couenne solver (via Pyomo)
+try:
+    from .couenne_solver import CouenneSolver
+    SolverRegistry.register("couenne", CouenneSolver, available=True)
+except ImportError as e:
+    import types
+    class CouenneSolver:
+        pass
+    CouenneSolver.solver_name = "couenne"
+    CouenneSolver.__name__ = "CouenneSolver"
+    SolverRegistry.register("couenne", CouenneSolver, available=False)
+    SolverRegistry.set_unavailable("couenne", f"pyomo not available: {e}")
+
+# F7-9: Register Symphony solver (via Pyomo)
+try:
+    from .symphony_solver import SymphonySolver
+    SolverRegistry.register("symphony", SymphonySolver, available=True)
+except ImportError as e:
+    import types
+    class SymphonySolver:
+        pass
+    SymphonySolver.solver_name = "symphony"
+    SymphonySolver.__name__ = "SymphonySolver"
+    SolverRegistry.register("symphony", SymphonySolver, available=False)
+    SolverRegistry.set_unavailable("symphony", f"pyomo not available: {e}")
+
+# F7-10: Register QSopt_ex solver
+try:
+    from .qsoptex_solver import QSoptExSolver
+    SolverRegistry.register("qsopt_ex", QSoptExSolver, available=True)
+except ImportError as e:
+    import types
+    class QSoptExSolver:
+        pass
+    QSoptExSolver.solver_name = "qsopt_ex"
+    QSoptExSolver.__name__ = "QSoptExSolver"
+    SolverRegistry.register("qsopt_ex", QSoptExSolver, available=False)
+    SolverRegistry.set_unavailable("qsopt_ex", f"qsopt-python not available: {e}")
+
 __all__ = [
     "BaseSolver",
     "SolverStats", 
@@ -118,6 +209,13 @@ __all__ = [
     "ECOSSolver",
     "OSQPSolver",
     "CVXOPTSolver",
+    "SCSSolver",
+    "IpoptSolver",
+    "AlpineSolver",
+    "BonminSolver",
+    "CouenneSolver",
+    "SymphonySolver",
+    "QSoptExSolver",
     "SolverLP",
     "SolverConfig",
     "MultiSolver",
