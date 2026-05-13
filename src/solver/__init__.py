@@ -93,6 +93,19 @@ except ImportError as e:
     SolverRegistry.register("osqp", OSQPSolver, available=False)
     SolverRegistry.set_unavailable("osqp", f"osqp not available: {e}")
 
+# F7-3: Register CVXOPT solver
+try:
+    from .cvxopt_solver import CVXOPTSolver
+    SolverRegistry.register("cvxopt", CVXOPTSolver, available=True)
+except ImportError as e:
+    import types
+    class CVXOPTSolver:
+        pass
+    CVXOPTSolver.solver_name = "cvxopt"
+    CVXOPTSolver.__name__ = "CVXOPTSolver"
+    SolverRegistry.register("cvxopt", CVXOPTSolver, available=False)
+    SolverRegistry.set_unavailable("cvxopt", f"cvxopt not available: {e}")
+
 __all__ = [
     "BaseSolver",
     "SolverStats", 
@@ -104,6 +117,7 @@ __all__ = [
     "GLPKSolver",
     "ECOSSolver",
     "OSQPSolver",
+    "CVXOPTSolver",
     "SolverLP",
     "SolverConfig",
     "MultiSolver",
