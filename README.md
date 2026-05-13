@@ -1,4 +1,4 @@
-# ISLA LP Benchmark v1.0.0
+# ISLA LP Benchmark v1.1.0
 
 ## Resumen del Proyecto
 
@@ -2781,9 +2781,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ## 20. Version
 
-**Version actual: 1.0.0**
+**Version actual: 1.1.0**
 
-### Changelog v1.0.0
+### Changelog v1.1.0
 
 - Plataforma de benchmark multi-solver
 - Solvers: HiGHS (native), GLPK (native), CBC (PuLP), Gurobi, SCIP (PySCIPOpt)
