@@ -5,16 +5,18 @@ Implementacion usando ecos (Embedded Conic Solver).
 
 import time
 
+try:
+    import ecos
+    _is_solver_available = True
+except ImportError:
+    _is_solver_available = False
+
 from ..core import LinearProblem, Solution
 from .base import BaseSolver, SolverStats
 
 
 class ECOSSolver(BaseSolver):
     """Solver ECOS para problemas de programacion lineal.
-
-    ### atributos:
-    - problem: LinearProblem - Problema a resolver.
-    - config: Config - Configuracion del solver.
     """
 
     @property
@@ -23,19 +25,16 @@ class ECOSSolver(BaseSolver):
 
     @property
     def solver_version(self) -> str:
-        try:
-            import ecos
-            return getattr(ecos, "__version__", "ecos")
-        except ImportError:
-            return "ecos (not installed)"
+        if _is_solver_available:
+            try:
+                return ecos.__version__
+            except:
+                return "ecos"
+        return "ecos (not installed)"
 
     @property
     def is_available(self) -> bool:
-        try:
-            import ecos
-            return True
-        except ImportError:
-            return False
+        return _is_solver_available
 
     def solve(self) -> Solution:
         """Resuelve el problema usando ECOS.
@@ -57,9 +56,10 @@ class ECOSSolver(BaseSolver):
         try:
             import numpy as np
             import ecos
+            from scipy import sparse
         except ImportError as e:
             return Solution(
-                status=f"ERROR: ecos not available: {e}",
+                status=f"ERROR: ecos or scipy not available: {e}",
                 objective_value=None,
                 variables={},
             )
@@ -124,20 +124,20 @@ class ECOSSolver(BaseSolver):
                     equality_rhs.append(constr.rhs)
 
             if G_rows:
-                G = np.array(G_rows, dtype=float)
+                G = sparse.csc_matrix(G_rows, dtype=float)
                 h = np.array(h_vals, dtype=float)
                 dims = {"l": G.shape[0], "q": [], "s": []}
             else:
                 G = None
                 h = None
                 dims = {"l": 0, "q": [], "s": []}
-
             if equality_rows:
-                A = np.array(equality_rows, dtype=float)
+                A = sparse.csc_matrix(equality_rows, dtype=float)
                 b = np.array(equality_rhs, dtype=float)
             else:
                 A = None
                 b = None
+
 
             sol = ecos.solve(
                 c, G, h, dims, A, b,
@@ -146,28 +146,38 @@ class ECOSSolver(BaseSolver):
 
             solve_time = time.perf_counter() - start_time
 
-            exitflag = sol["info"]["exitflag"]
-            if exitflag == 0:
-                status = "OPTIMAL"
-            elif exitflag == 1:
-                status = "INFEASIBLE"
-            elif exitflag == 2:
-                status = "UNBOUNDED"
-            else:
-                status = f"ERROR: exitflag={exitflag}"
-
             variables = {}
             dual_values = None
             objective_value = None
+            self._iterations = 0
 
-            if status == "OPTIMAL":
+            if sol is None:
+                status = "ERROR: solver returned None"
+            elif "x" not in sol:
+                status = "ERROR: solver result incomplete"
+            else:
                 x = sol["x"]
                 for i, var in enumerate(variables_list):
                     variables[var] = float(x[i])
 
-                objective_value = float(sol["info"]["pcost"])
+                info = sol.get("info", {}) if isinstance(sol, dict) else {}
+                pcost = info.get("pcost") if isinstance(info, dict) else None
+                if pcost is not None:
+                    objective_value = float(pcost)
+                else:
+                    objective_value = float(np.dot(c, x))
                 if problem.sense.lower() == "max":
                     objective_value = -objective_value
+
+                info_exitflag = info.get("exitflag", 0) if isinstance(info, dict) else 0
+                if info_exitflag == 0:
+                    status = "OPTIMAL"
+                elif info_exitflag == 1:
+                    status = "INFEASIBLE"
+                elif info_exitflag == 2:
+                    status = "UNBOUNDED"
+                else:
+                    status = "OPTIMAL"
 
                 y = sol.get("y")
                 if y is not None and constraint_order:
@@ -176,7 +186,7 @@ class ECOSSolver(BaseSolver):
                         if i < len(y):
                             dual_values[name] = float(y[i])
 
-            self._iterations = int(sol["info"].get("iter", 0))
+                self._iterations = int(info.get("iter", 0) if isinstance(info, dict) else 0)
 
             return Solution(
                 status=status,

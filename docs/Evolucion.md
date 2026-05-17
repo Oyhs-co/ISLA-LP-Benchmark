@@ -20,8 +20,8 @@
 ### v1.2.0 (2026-05-13)
 
 #### Nuevas Funcionalidades
-- 10 nuevos solvers implementados: ECOS, OSQP, CVXOPT, SCS, Ipopt, Alpine, Bonmin, Couenne, Symphony, QSopt_ex
-- Total de 15 solvers disponibles con registro dinamico via SolverRegistry
+- 10 nuevos solvers implementados: ECOS, OSQP, CVXOPT, SCS, Ipopt
+- Total de 10 solvers disponibles con registro dinamico via SolverRegistry
 - Nuevas flags CLI con shortcuts organizados por seccion:
   - `--version` / `-V`: Mostrar version del programa
   - `--json` / `-j`: Salida estructurada en formato JSON
@@ -32,19 +32,14 @@
 - Ayuda del CLI reorganizada en grupos: Informacion, Seleccion de solver, Resolucion, Benchmark, Salida
 - Timeout propagado a todos los solvers via SolverConfig.time_limit + BenchmarkConfig.time_limit
 - Diagnostico --no-solve con informacion de variables, restricciones y matriz Polars
-- Cobertura completa de 15 solvers con manejo graceful de errores de importacion
+- Cobertura completa de 11 solvers con manejo graceful de errores de importacion
 
 #### Nuevos Solvers
 - **ECOS** (`ecos`): Solver conico embebido de punto interior para LP y SOCP
 - **OSQP** (`osqp`): Solver de optimizacion cuadratica basado en ADMM
 - **CVXOPT** (`cvxopt`): Solver de programacion convexa para LP, QP y SOCP
 - **SCS** (`scs`): Solver conico de punto fijo escalable (ADMM)
-- **Ipopt** (`cyipopt`): Solver de punto interior para optimizacion no lineal
-- **Alpine** (`pyoptinterface`): Interfaz moderna con backend HiGHS
-- **Bonmin** (`coin-or/bonmin`): Solver MINLP via Pyomo
-- **Couenne** (`coin-or/couenne`): Solver de optimizacion global MINLP via Pyomo
-- **Symphony** (`coin-or/symphony`): Solver MILP con metaheuristicas via Pyomo
-- **QSopt_ex** (`qsopt-python`): Solver academico con binding nativo C
+- **Ipopt** (`casadi`): Solver de punto interior para optimizacion no lineal
 
 #### CLI
 - Ayuda reorganizada con argumentos agrupados por seccion

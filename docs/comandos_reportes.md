@@ -173,7 +173,7 @@ python -m src.cli.benchmark data/problem.txt data/milp_example.txt --pdf
 - Todos los reportes usan márgenes de 15mm (multi-problema) o 20mm (individual/benchmark)
 - Los gráficos se centran respetando los márgenes
 - Formatos soportados: `.txt` (formato estándar LP), `.lp` (CPLEX/LP)
-- Solvers soportados: `gurobi`, `cbc`, `scip`, `highs`, `glpk`, `ecos`, `osqp`, `cvxopt`, `scs`, `ipopt`, `alpine`, `bonmin`, `couenne`, `symphony`, `qsopt_ex`
+- Solvers soportados: `gurobi`, `cbc`, `scip`, `highs`, `glpk`, `ecos`, `osqp`, `cvxopt`, `scs`, `ipopt`
 - Los reportes multi-problema comparan varios solvers en un solo PDF
 - El benchmark genera comparativas detalladas con gráficos separados por página
 - SCIP soporta MILP (variables enteras y binarias)

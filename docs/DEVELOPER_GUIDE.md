@@ -22,12 +22,7 @@ src/
 │   ├── osqp_solver.py        # OSQPSolver (osqp)
 │   ├── cvxopt_solver.py      # CVXOPTSolver (cvxopt)
 │   ├── scs_solver.py         # SCSSolver (scs)
-│   ├── ipopt_solver.py       # IpoptSolver (cyipopt)
-│   ├── alpine_solver.py      # AlpineSolver (pyoptinterface)
-│   ├── bonmin_solver.py      # BonminSolver (Pyomo)
-│   ├── couenne_solver.py     # CouenneSolver (Pyomo)
-│   ├── symphony_solver.py    # SymphonySolver (Pyomo)
-│   ├── qsoptex_solver.py     # QSoptExSolver (qsopt native C)
+│   ├── ipopt_solver.py       # IpoptSolver (casadi)
 │   ├── benchmark.py          # BenchmarkRunner, BenchmarkConfig
 │   ├── multi_solver.py       # MultiSolverResult
 │   └── __init__.py           # Registro de todos los solvers

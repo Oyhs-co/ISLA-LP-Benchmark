@@ -70,14 +70,6 @@ class HiGHSSolver(BaseSolver):
                 
                 hp.addVar(lb, ub)
             
-            for var in variables_list:
-                bound = problem.bounds.get(var)
-                
-                lb = 0.0 if not bound or bound.lower is None else bound.lower
-                ub = INF if not bound or bound.upper is None else bound.upper
-                
-                hp.addVar(lb, ub)
-            
             cost_map = problem.objective
             for i, var in enumerate(variables_list):
                 cost = cost_map.get(var, 0)
@@ -150,14 +142,12 @@ class HiGHSSolver(BaseSolver):
                 except:
                     basis = None
             
-            # F3-6: Get sensitivity analysis
+            sensitivity = None
             try:
                 from ..analysis.sensitivity import extract_highs_sensitivity
                 sensitivity = extract_highs_sensitivity(hp)
             except:
-                sensitivity = None
-            else:
-                basis = None
+                pass
             
             # F3-8: Use proper infinity
             from ..core.constants import DEFAULT_INFINITY

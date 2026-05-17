@@ -5,16 +5,18 @@ Implementacion usando scs (Splitting Conic Solver).
 
 import time
 
+try:
+    import scs
+    _is_solver_available = True
+except ImportError:
+    _is_solver_available = False
+
 from ..core import LinearProblem, Solution
 from .base import BaseSolver, SolverStats
 
 
 class SCSSolver(BaseSolver):
     """Solver SCS para problemas de programacion lineal.
-
-    ### atributos:
-    - problem: LinearProblem - Problema a resolver.
-    - config: Config - Configuracion del solver.
     """
 
     @property
@@ -23,19 +25,16 @@ class SCSSolver(BaseSolver):
 
     @property
     def solver_version(self) -> str:
-        try:
-            import scs
-            return getattr(scs, "__version__", "scs")
-        except ImportError:
-            return "scs (not installed)"
+        if _is_solver_available:
+            try:
+                return scs.__version__
+            except:
+                return "scs"
+        return "scs (not installed)"
 
     @property
     def is_available(self) -> bool:
-        try:
-            import scs
-            return True
-        except ImportError:
-            return False
+        return _is_solver_available
 
     def solve(self) -> Solution:
         """Resuelve el problema usando SCS.

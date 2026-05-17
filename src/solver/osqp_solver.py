@@ -5,16 +5,18 @@ Implementacion usando osqp (Operator Splitting QP Solver).
 
 import time
 
+try:
+    import osqp
+    _is_solver_available = True
+except ImportError:
+    _is_solver_available = False
+
 from ..core import LinearProblem, Solution
 from .base import BaseSolver, SolverStats
 
 
 class OSQPSolver(BaseSolver):
     """Solver OSQP para problemas de programacion lineal.
-
-    ### atributos:
-    - problem: LinearProblem - Problema a resolver.
-    - config: Config - Configuracion del solver.
     """
 
     @property
@@ -23,19 +25,16 @@ class OSQPSolver(BaseSolver):
 
     @property
     def solver_version(self) -> str:
-        try:
-            import osqp
-            return getattr(osqp, "__version__", "osqp")
-        except ImportError:
-            return "osqp (not installed)"
+        if _is_solver_available:
+            try:
+                return osqp.__version__
+            except:
+                return "osqp"
+        return "osqp (not installed)"
 
     @property
     def is_available(self) -> bool:
-        try:
-            import osqp
-            return True
-        except ImportError:
-            return False
+        return _is_solver_available
 
     def solve(self) -> Solution:
         """Resuelve el problema usando OSQP.

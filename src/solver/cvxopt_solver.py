@@ -5,16 +5,18 @@ Implementacion usando cvxopt (solvers.lp).
 
 import time
 
+try:
+    import cvxopt
+    _is_solver_available = True
+except ImportError:
+    _is_solver_available = False
+
 from ..core import LinearProblem, Solution
 from .base import BaseSolver, SolverStats
 
 
 class CVXOPTSolver(BaseSolver):
     """Solver CVXOPT para problemas de programacion lineal.
-
-    ### atributos:
-    - problem: LinearProblem - Problema a resolver.
-    - config: Config - Configuracion del solver.
     """
 
     @property
@@ -23,19 +25,16 @@ class CVXOPTSolver(BaseSolver):
 
     @property
     def solver_version(self) -> str:
-        try:
-            import cvxopt
-            return getattr(cvxopt, "__version__", "cvxopt")
-        except ImportError:
-            return "cvxopt (not installed)"
+        if _is_solver_available:
+            try:
+                return cvxopt.__version__
+            except:
+                return "cvxopt"
+        return "cvxopt (not installed)"
 
     @property
     def is_available(self) -> bool:
-        try:
-            import cvxopt
-            return True
-        except ImportError:
-            return False
+        return _is_solver_available
 
     def solve(self) -> Solution:
         """Resuelve el problema usando CVXOPT.

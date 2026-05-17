@@ -75,11 +75,6 @@ flowchart TB
         CVXOPT["cvxopt_solver.py - CVXOPT"]
         SCS["scs_solver.py - SCS"]
         IPOPT["ipopt_solver.py - Ipopt"]
-        ALPINE["alpine_solver.py - Alpine"]
-        BONMIN["bonmin_solver.py - Bonmin"]
-        COUENNE["couenne_solver.py - Couenne"]
-        SYMPHONY["symphony_solver.py - Symphony"]
-        QSOPTEX["qsoptex_solver.py - QSopt_ex"]
         BENCHRUN["benchmark.py - BenchmarkRunner"]
     end
     
@@ -157,7 +152,7 @@ flowchart LR
     
     subgraph RESOLUCION["Resolucion"]
         direction TB
-        SOLVERS["Gurobi | HiGHS | GLPK | CBC | SCIP | ECOS | OSQP | CVXOPT | SCS | Ipopt | Alpine | Bonmin | Couenne | Symphony | QSopt_ex"]
+        SOLVERS["Gurobi | HiGHS | GLPK | CBC | SCIP | ECOS | OSQP | CVXOPT | SCS | Ipopt"]
         STATS["SolverStats - Metricas"]
     end
     
@@ -227,7 +222,7 @@ stateDiagram-v2
 | Capa | Componente | Fichero | Descripcion |
 |------|-----------|---------|-------------|
 | Presentacion | main.py, cli/ | Punto de entrada CLI | Gestiona argumentos y coordina ejecucion |
-| Solucion | solver/ | Múltiples implementaciones | Gurobi, HiGHS, GLPK, CBC, SCIP, ECOS, OSQP, CVXOPT, SCS, Ipopt, Alpine, Bonmin, Couenne, Symphony, QSopt_ex |
+| Solucion | solver/ | Múltiples implementaciones | Gurobi, HiGHS, GLPK, CBC, SCIP, ECOS, OSQP, CVXOPT, SCS, Ipopt |
 | Benchmark | benchmark.py | BenchmarkRunner | Orquestador con warmup y métricas |
 | Análisis | analysis.py, benchmark_report.py | Reportes PDF | Generación de informes académicos |
 | Visualización | visualization.py | Gráficos 2D | Región factible matplotlib |
@@ -293,12 +288,8 @@ El módulo `src/core/constants.py` define tolerancias numéricas centralizadas p
 | **OSQP** | osqp | Native | Requiere instalacion | Solver de optimizacion cuadratica (ADMM) |
 | **CVXOPT** | cvxopt | Native | Requiere instalacion | Solver de programacion convexa |
 | **SCS** | scs | Native | Requiere instalacion | Solver conico de punto fijo (ADMM) |
-| **Ipopt** | cyipopt | Native | Requiere instalacion | Solver de punto interior para NLP |
-| **Alpine** | pyoptinterface | Native | Requiere instalacion | Interfaz moderna de optimizacion (HiGHS) |
-| **Bonmin** | coin-or/bonmin | Pyomo | Requiere binario | Branch-and-Combine para MINLP |
-| **Couenne** | coin-or/couenne | Pyomo | Requiere binario | Optimizacion global para MINLP |
-| **Symphony** | coin-or/symphony | Pyomo | Requiere binario | Solver MILP con metaheuristicas |
-| **QSopt_ex** | qsopt-python | Native C | Requiere binario | Solver academico con binding nativo |
+| **Ipopt** | casadi | Native | Pip installable | Solver de punto interior para NLP |
+
 
 ### 3.2 Arquitectura de Solvers
 
@@ -322,11 +313,6 @@ flowchart TB
         CVXOPT["CVXOPTSolver"]
         SCS["SCSSolver"]
         IPOPT["IpoptSolver"]
-        ALPINE["AlpineSolver"]
-        BONMIN["BonminSolver"]
-        COUENNE["CouenneSolver"]
-        SYMPHONY["SymphonySolver"]
-        QSOPTEX["QSoptExSolver"]
     end
     
     BASE --> IMPLEMENTATIONS
@@ -361,11 +347,7 @@ flowchart TB
 | CVXOPT | solver/cvxopt_solver.py | CVXOPTSolver | Activo | Programacion convexa, LP/QP/SOCP |
 | SCS | solver/scs_solver.py | SCSSolver | Activo | Solver conico punto fijo, escalable |
 | Ipopt | solver/ipopt_solver.py | IpoptSolver | Activo | Punto interior para NLP, no lineal |
-| Alpine | solver/alpine_solver.py | AlpineSolver | Activo | PyOptInterface + HiGHS backend |
-| Bonmin | solver/bonmin_solver.py | BonminSolver | Activo | Pyomo, Branch-and-Combine MINLP |
-| Couenne | solver/couenne_solver.py | CouenneSolver | Activo | Pyomo, optimizacion global MINLP |
-| Symphony | solver/symphony_solver.py | SymphonySolver | Activo | Pyomo, MILP con metaheuristicas |
-| QSopt_ex | solver/qsoptex_solver.py | QSoptExSolver | Activo | Binding nativo C, academico |
+
 
 ### 3.4 Metodos de Configuracion
 
@@ -412,13 +394,7 @@ Salida (ejemplo en entorno con modulos instalados):
     cvxopt                DISPONIBLE
     scs                   DISPONIBLE
     ipopt                 DISPONIBLE
-    alpine                DISPONIBLE
-    bonmin                DISPONIBLE
-    couenne               DISPONIBLE
-    symphony              DISPONIBLE
-    qsopt_ex              DISPONIBLE
-
-  13/15 solvers disponibles: gurobi, cbc, scip, ecos, osqp, cvxopt, scs, ipopt, alpine, bonmin, couenne, symphony, qsopt_ex
+  11/11 solvers disponibles: gurobi, highs, glpk, cbc, scip, ecos, osqp, cvxopt, scs, ipopt
 ```
 
 ---
@@ -449,9 +425,9 @@ Salida (ejemplo en entorno con modulos instalados):
 | osqp | >=0.6.0 | Solver de optimizacion cuadratica OSQP |
 | cvxopt | >=1.3.0 | Solver de programacion convexa CVXOPT |
 | scs | >=3.0.0 | Solver conico de punto fijo SCS |
-| cyipopt | >=1.3.0 | Interfaz Python para Ipopt NLP |
+| casadi | >=3.7.0 | Interfaz Python para Ipopt NLP |
 | pyoptinterface | >=0.6.0 | Interfaz moderna de optimizacion |
-| pyomo | >=6.7.0 | Framework de optimizacion (Bonmin, Couenne, Symphony) |
+
 
 ---
 
@@ -1189,11 +1165,6 @@ classDiagram
     BaseSolver <|-- CVXOPTSolver
     BaseSolver <|-- SCSSolver
     BaseSolver <|-- IpoptSolver
-    BaseSolver <|-- AlpineSolver
-    BaseSolver <|-- BonminSolver
-    BaseSolver <|-- CouenneSolver
-    BaseSolver <|-- SymphonySolver
-    BaseSolver <|-- QSoptExSolver
     SolverRegistry --> BaseSolver
 ```
 
@@ -1215,11 +1186,7 @@ classDiagram
 | CVXOPTSolver | solver/cvxopt_solver.py | Solver convexo CVXOPT |
 | SCSSolver | solver/scs_solver.py | Solver conico SCS |
 | IpoptSolver | solver/ipopt_solver.py | Solver NLP Ipopt |
-| AlpineSolver | solver/alpine_solver.py | Interfaz PyOptInterface (HiGHS) |
-| BonminSolver | solver/bonmin_solver.py | Solver MINLP Bonmin (Pyomo) |
-| CouenneSolver | solver/couenne_solver.py | Solver MINLP Couenne (Pyomo) |
-| SymphonySolver | solver/symphony_solver.py | Solver MILP Symphony (Pyomo) |
-| QSoptExSolver | solver/qsoptex_solver.py | Solver academico QSopt_ex |
+
 
 
 
@@ -1267,12 +1234,8 @@ classDiagram
 | OSQP | solver/osqp_solver.py | OSQPSolver | Native (osqp) | Activo |
 | CVXOPT | solver/cvxopt_solver.py | CVXOPTSolver | Native (cvxopt) | Activo |
 | SCS | solver/scs_solver.py | SCSSolver | Native (scs) | Activo |
-| Ipopt | solver/ipopt_solver.py | IpoptSolver | Native (cyipopt) | Activo |
-| Alpine | solver/alpine_solver.py | AlpineSolver | Native (pyoptinterface) | Activo |
-| Bonmin | solver/bonmin_solver.py | BonminSolver | Pyomo (bonmin) | Activo |
-| Couenne | solver/couenne_solver.py | CouenneSolver | Pyomo (couenne) | Activo |
-| Symphony | solver/symphony_solver.py | SymphonySolver | Pyomo (symphony) | Activo |
-| QSopt_ex | solver/qsoptex_solver.py | QSoptExSolver | Native C (qsopt) | Activo |
+| Ipopt | solver/ipopt_solver.py | IpoptSolver | Native (casadi) | Activo |
+
 
 **Diagrama de Implementaciones**:
 
@@ -1288,11 +1251,6 @@ flowchart TB
     INP --> CVXOPT["CVXOPTSolver"]
     INP --> SCS["SCSSolver"]
     INP --> IPOPT["IpoptSolver"]
-    INP --> ALPINE["AlpineSolver"]
-    INP --> BONMIN["BonminSolver"]
-    INP --> COUENNE["CouenneSolver"]
-    INP --> SYMPHONY["SymphonySolver"]
-    INP --> QSOPTEX["QSoptExSolver"]
     
     GUROBI --> OUT
     HIGHS --> OUT
@@ -2955,13 +2913,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   - OSQP (osqp) - Solver de optimizacion cuadratica
   - CVXOPT (cvxopt) - Solver de programacion convexa
   - SCS (scs) - Solver conico de punto fijo
-  - Ipopt (cyipopt) - Solver de punto interior para optimizacion no lineal
-  - Alpine (pyoptinterface) - Interfaz moderna de optimizacion via HiGHS
-- Nuevos solvers MILP via Pyomo:
-  - Bonmin (coin-or/bonmin) - Branch-and-Combine MINLP
-  - Couenne (coin-or/couenne) - Global optimization MINLP
-  - Symphony (coin-or/symphony) - Solver MILP con metaheuristicas
-- QSopt_ex (qsopt-python) - Solver academico con binding nativo C
+  - Ipopt (casadi) - Solver de punto interior para optimizacion no lineal
 - Nuevas flags CLI con shortcuts organizados por seccion
 - --version, -V: Mostrar version del programa
 - --json, -j: Salida estructurada en formato JSON

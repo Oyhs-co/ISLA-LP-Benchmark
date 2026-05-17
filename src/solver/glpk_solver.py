@@ -138,7 +138,6 @@ class GLPKSolver(BaseSolver):
             swiglpk.glp_init_smcp(smcp)
             if self.config.presolve:
                 swiglpk.glp_scale_prob(prob, swiglpk.GLP_SF_AUTO)
-                swiglpk.glp_set_obj_dir(prob, swiglpk.GLP_ON)
             
             smcp.msg_lev = swiglpk.GLP_MSG_OFF if not self.config.verbose else swiglpk.GLP_MSG_ALL
             

@@ -102,14 +102,9 @@ cbc             3        3          111.32ms
 | OSQP | osqp | Native | Requiere instalacion |
 | CVXOPT | cvxopt | Native | Requiere instalacion |
 | SCS | scs | Native | Requiere instalacion |
-| Ipopt | cyipopt | Native | Requiere instalacion |
-| Alpine | pyoptinterface | Native | Requiere instalacion |
-| Bonmin | coin-or/bonmin | Pyomo | Requiere binario |
-| Couenne | coin-or/couenne | Pyomo | Requiere binario |
-| Symphony | coin-or/symphony | Pyomo | Requiere binario |
-| QSopt_ex | qsopt-python | Native C | Requiere binario |
+| Ipopt | casadi | Native | Pip installable |
 
-**Nota**: Gurobi, SCIP, CBC, ECOS, OSQP, CVXOPT, SCS, Bonmin, Couenne y Symphony soportan MILP (variables enteras y binarias).
+**Nota**: Gurobi, SCIP, CBC, ECOS, OSQP, CVXOPT y SCS soportan MILP (variables enteras y binarias).
 
 ## Resolucion Simple
 
@@ -322,7 +317,7 @@ x >= 0; y >= 0
 ```
 
 ### Solvers con soporte MILP
-Gurobi, CBC, SCIP, ECOS, CVXOPT, Bonmin, Couenne, Symphony
+Gurobi, CBC, SCIP, ECOS, CVXOPT
 
 ```bash
 # Resolver MILP con Gurobi

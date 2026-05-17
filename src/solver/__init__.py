@@ -9,7 +9,7 @@ from .multi_solver import MultiSolver, MultiSolverResult, ProblemResult
 from .benchmark import BenchmarkRunner, BenchmarkResult, BenchmarkConfig, run_quick_benchmark
 
 SolverLP = GurobiSolver
-SolverConfig = GurobiSolver.Config
+SolverConfig = BaseSolver.Config
 
 SolverRegistry.register("gurobi", GurobiSolver, available=True)
 
@@ -69,8 +69,10 @@ except ImportError as e:
 
 # F7-1: Register ECOS solver
 try:
-    from .ecos import ECOSSolver
-    SolverRegistry.register("ecos", ECOSSolver, available=True)
+    from .ecos import ECOSSolver, _is_solver_available as _ecos_avail
+    SolverRegistry.register("ecos", ECOSSolver, available=_ecos_avail)
+    if not _ecos_avail:
+        SolverRegistry.set_unavailable("ecos", "ecos package not installed")
 except ImportError as e:
     import types
     class ECOSSolver:
@@ -82,8 +84,10 @@ except ImportError as e:
 
 # F7-2: Register OSQP solver
 try:
-    from .osqp_solver import OSQPSolver
-    SolverRegistry.register("osqp", OSQPSolver, available=True)
+    from .osqp_solver import OSQPSolver, _is_solver_available as _osqp_avail
+    SolverRegistry.register("osqp", OSQPSolver, available=_osqp_avail)
+    if not _osqp_avail:
+        SolverRegistry.set_unavailable("osqp", "osqp package not installed")
 except ImportError as e:
     import types
     class OSQPSolver:
@@ -95,8 +99,10 @@ except ImportError as e:
 
 # F7-3: Register CVXOPT solver
 try:
-    from .cvxopt_solver import CVXOPTSolver
-    SolverRegistry.register("cvxopt", CVXOPTSolver, available=True)
+    from .cvxopt_solver import CVXOPTSolver, _is_solver_available as _cvxopt_avail
+    SolverRegistry.register("cvxopt", CVXOPTSolver, available=_cvxopt_avail)
+    if not _cvxopt_avail:
+        SolverRegistry.set_unavailable("cvxopt", "cvxopt package not installed")
 except ImportError as e:
     import types
     class CVXOPTSolver:
@@ -108,8 +114,10 @@ except ImportError as e:
 
 # F7-4: Register SCS solver
 try:
-    from .scs_solver import SCSSolver
-    SolverRegistry.register("scs", SCSSolver, available=True)
+    from .scs_solver import SCSSolver, _is_solver_available as _scs_avail
+    SolverRegistry.register("scs", SCSSolver, available=_scs_avail)
+    if not _scs_avail:
+        SolverRegistry.set_unavailable("scs", "scs package not installed")
 except ImportError as e:
     import types
     class SCSSolver:
@@ -119,10 +127,12 @@ except ImportError as e:
     SolverRegistry.register("scs", SCSSolver, available=False)
     SolverRegistry.set_unavailable("scs", f"scs not available: {e}")
 
-# F7-5: Register Ipopt solver
+# F7-5: Register Ipopt solver (via CasADi)
 try:
-    from .ipopt_solver import IpoptSolver
-    SolverRegistry.register("ipopt", IpoptSolver, available=True)
+    from .ipopt_solver import IpoptSolver, _is_solver_available as _ipopt_avail
+    SolverRegistry.register("ipopt", IpoptSolver, available=_ipopt_avail)
+    if not _ipopt_avail:
+        SolverRegistry.set_unavailable("ipopt", "casadi package not installed")
 except ImportError as e:
     import types
     class IpoptSolver:
@@ -130,72 +140,8 @@ except ImportError as e:
     IpoptSolver.solver_name = "ipopt"
     IpoptSolver.__name__ = "IpoptSolver"
     SolverRegistry.register("ipopt", IpoptSolver, available=False)
-    SolverRegistry.set_unavailable("ipopt", f"cyipopt not available: {e}")
+    SolverRegistry.set_unavailable("ipopt", f"casadi not available: {e}")
 
-# F7-6: Register Alpine solver (via PyOptInterface)
-try:
-    from .alpine_solver import AlpineSolver
-    SolverRegistry.register("alpine", AlpineSolver, available=True)
-except ImportError as e:
-    import types
-    class AlpineSolver:
-        pass
-    AlpineSolver.solver_name = "alpine"
-    AlpineSolver.__name__ = "AlpineSolver"
-    SolverRegistry.register("alpine", AlpineSolver, available=False)
-    SolverRegistry.set_unavailable("alpine", f"pyoptinterface not available: {e}")
-
-# F7-7: Register Bonmin solver (via Pyomo)
-try:
-    from .bonmin_solver import BonminSolver
-    SolverRegistry.register("bonmin", BonminSolver, available=True)
-except ImportError as e:
-    import types
-    class BonminSolver:
-        pass
-    BonminSolver.solver_name = "bonmin"
-    BonminSolver.__name__ = "BonminSolver"
-    SolverRegistry.register("bonmin", BonminSolver, available=False)
-    SolverRegistry.set_unavailable("bonmin", f"pyomo not available: {e}")
-
-# F7-8: Register Couenne solver (via Pyomo)
-try:
-    from .couenne_solver import CouenneSolver
-    SolverRegistry.register("couenne", CouenneSolver, available=True)
-except ImportError as e:
-    import types
-    class CouenneSolver:
-        pass
-    CouenneSolver.solver_name = "couenne"
-    CouenneSolver.__name__ = "CouenneSolver"
-    SolverRegistry.register("couenne", CouenneSolver, available=False)
-    SolverRegistry.set_unavailable("couenne", f"pyomo not available: {e}")
-
-# F7-9: Register Symphony solver (via Pyomo)
-try:
-    from .symphony_solver import SymphonySolver
-    SolverRegistry.register("symphony", SymphonySolver, available=True)
-except ImportError as e:
-    import types
-    class SymphonySolver:
-        pass
-    SymphonySolver.solver_name = "symphony"
-    SymphonySolver.__name__ = "SymphonySolver"
-    SolverRegistry.register("symphony", SymphonySolver, available=False)
-    SolverRegistry.set_unavailable("symphony", f"pyomo not available: {e}")
-
-# F7-10: Register QSopt_ex solver
-try:
-    from .qsoptex_solver import QSoptExSolver
-    SolverRegistry.register("qsopt_ex", QSoptExSolver, available=True)
-except ImportError as e:
-    import types
-    class QSoptExSolver:
-        pass
-    QSoptExSolver.solver_name = "qsopt_ex"
-    QSoptExSolver.__name__ = "QSoptExSolver"
-    SolverRegistry.register("qsopt_ex", QSoptExSolver, available=False)
-    SolverRegistry.set_unavailable("qsopt_ex", f"qsopt-python not available: {e}")
 
 __all__ = [
     "BaseSolver",
@@ -211,11 +157,6 @@ __all__ = [
     "CVXOPTSolver",
     "SCSSolver",
     "IpoptSolver",
-    "AlpineSolver",
-    "BonminSolver",
-    "CouenneSolver",
-    "SymphonySolver",
-    "QSoptExSolver",
     "SolverLP",
     "SolverConfig",
     "MultiSolver",

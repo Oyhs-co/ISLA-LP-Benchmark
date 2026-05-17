@@ -85,11 +85,7 @@ Para problemas con variables enteras (MILP):
 | CVXOPT | Punto Interior (IPM) | LP, QP, SOCP, SDP | Programacion convexa general |
 | SCS | ADMM + Punto Fijo | LP, SOCP, SDP | Muy escalable, grandes problemas |
 | Ipopt | Punto Interior (Barrera) | NLP | Optimizacion no lineal |
-| Alpine | PyOptInterface + HiGHS | LP, MILP | Interfaz moderna, bajo overhead |
-| Bonmin | Branch & Bound + Cut | MINLP | No lineal entero |
-| Couenne | Branch & Bound + LP/NLP | MINLP | Optimizacion global |
-| Symphony | Branch & Cut + Metaheuristicas | MILP | Metaheuristicas, paralelo |
-| QSopt_ex | Simplex | LP | Academico, binding nativo C |
+
 
 ### Cuando Usar Cada Solver
 
@@ -103,9 +99,7 @@ Para problemas con variables enteras (MILP):
 | Optimizacion cuadratica | OSQP, CVXOPT |
 | Programacion convexa general | CVXOPT |
 | Optimizacion no lineal | Ipopt |
-| MINLP (no lineal entero) | Bonmin, Couenne |
 | Problemas muy grandes y sparse | OSQP, SCS |
-| Uso academico/docencia | QSopt_ex |
 
 ## Analisis de Sensibilidad
 
@@ -262,6 +256,6 @@ config = BenchmarkConfig(
 6. Domahidi, A. et al. (2013). *ECOS: An SOCP solver for embedded systems*. ECC.
 7. HiGHS Documentation. *Highs Optimization Solver*.
 8. GLPK Documentation. *GNU Linear Programming Kit*.
-9. COIN-OR Documentation. *CBC, Bonmin, Couenne, Symphony*.
+9. COIN-OR Documentation. *CBC*.
 
 Para detalles de API, ver [README.md](../README.md).
