@@ -1,105 +1,142 @@
-# Guía Matemática - ISLA LP Benchmark
+# Guia Matematica - ISLA LP Benchmark v1.2.0
 
-Esta guía es para **matemáticos e investigadores** que quieren entender la teoría detrás del sistema.
+Esta guia es para **matematicos e investigadores** que quieren entender la teoria detras del sistema.
 
-## Fundamento Matemático
+## Fundamento Matematico
 
-### Problema de Programación Lineal
+### Problema de Programacion Lineal
 
-Un problema de Programación Lineal (PL) tiene:
+Un problema de Programacion Lineal (PL) tiene:
 
-1. **Función Objetivo**: Maximizar o minimizar
+1. **Funcion Objetivo**: Maximizar o minimizar
    ```
-   max/min: c₁x₁ + c₂x₂ + ... + cₙxₙ
+   max/min: c1x1 + c2x2 + ... + cnxn
    ```
 
 2. **Restricciones**: Desigualdades/igualdades lineales
    ```
-   a₁₁x₁ + a₁₂x₂ + ... + a₁ₙxₙ <= b₁
-   a₂₁x₁ + a₂₂x₂ + ... + a₂ₙxₙ >= b₂
+   a11x1 + a12x2 + ... + a1nxn <= b1
+   a21x1 + a22x2 + ... + a2nxn >= b2
    ...
-   aₘ₁x₁ + aₘ₂x₂ + ... + aₘₙxₙ = bₘ
+   am1x1 + am2x2 + ... + amnxn = bm
    ```
 
-3. **Límites**: Límites de variables
+3. **Limites**: Limites de variables
    ```
-   xᵢ >= ℓᵢ
-   xᵢ <= uᵢ
+   xi >= li
+   xi <= ui
    ```
 
-### Forma Estándar
+### Forma Estandar
 
-El sistema convierte problemas a forma estándar:
+El sistema convierte problemas a forma estandar:
 
-- **Maximización**: Convertir a minimización si es necesario
+- **Maximizacion**: Convertir a minimizacion si es necesario
 - **Desigualdades**: Convertir >= a <= multiplicando por -1
 - **Variables**: Agregar variables de holgura para restricciones <=
 
-## Métodos de Solución
+## Metodos de Solucion
 
 ### Simplex
 
-El **Método Simplex** (Dantzig, 1947) es el algoritmo primario:
+El **Metodo Simplex** (Dantzig, 1947) es el algoritmo primario:
 
-1. **Solución Factible Básica**: Comenzar en un vértice de la región factible
-2. **Operaciones Pivote**: Moverse a vértices adyacentes con mejor valor objetivo
-3. **Prueba de Optimalidad**: Detenerse cuando ningún vértice adyacente mejore el objetivo
+1. **Solucion Factible Basica**: Comenzar en un vertice de la region factible
+2. **Operaciones Pivote**: Moverse a vertices adyacentes con mejor valor objetivo
+3. **Prueba de Optimalidad**: Detenerse cuando ningun vertice adyacente mejore el objetivo
 
-**Complejidad**: O(mn) por iteración, polinomial en promedio.
+**Complejidad**: O(mn) por iteracion, polinomial en promedio.
 
-### Comparación de Solvers
+### Punto Interior
 
-| Solver | Algoritmo | Fortalezas |
-|--------|-----------|------------|
-| **HiGHS** | Dual Simplex | Rápido para LP densos |
-| **GLPK** | Simplex | Open source estable |
-| **CBC** | Branch & Cut | Para MIP |
-| **Gurobi** | Multi-method | Mejor rendimiento general |
+Los **Metodos de Barrera** (Karmarkar, 1984) siguen el camino central:
 
-### Métodos de Punto Interior
+1. **Barrera Logaritmica**: Agregar termino de barrera al objetivo
+2. **Camino Central**: Seguir camino al optimo
+3. **Metodo de Newton**: Resolver condiciones KKT
 
-Para problemas grandes, algunos solvers usan **Métodos de Barrera**:
+### ADMM (Alternating Direction Method of Multipliers)
 
-1. **Barrera Logarítmica**: Agregar término de barrera al objetivo
-2. **Camino Central**: Seguir camino al óptimo
-3. **Método de Newton**: Resolver condiciones KKT
+Usado por OSQP y SCS para problemas convexos a gran escala:
+1. Descomponer el problema en subproblemas mas pequenos
+2. Alternar entre actualizaciones de variables primales y duales
+3. Converge a solucion de alta precision en pocas iteraciones
 
-## Análisis de Sensibilidad
+### Branch-and-Cut (MILP)
+
+Para problemas con variables enteras (MILP):
+1. **Branch**: Dividir el espacio de busqueda en subproblemas
+2. **Bound**: Acotar usando relajacion LP
+3. **Cut**: Agregar planos de corte para estrechar la relajacion
+
+## Comparacion de Solvers
+
+### Tabla Comparativa
+
+| Solver | Algoritmo Principal | Tipo de Problema | Fortalezas |
+|--------|---------------------|------------------|------------|
+| Gurobi | Simplex / Barrera / Concurrente | LP, QP, MILP | Mejor rendimiento general |
+| HiGHS | Simplex Dual | LP, MILP | Rapido para LP densos |
+| GLPK | Simplex | LP, MILP | Open source estable, portatil |
+| CBC | Branch & Cut | MILP | Robusto para MIP |
+| SCIP | Branch & Cut | MILP, MINLP | Framework completo, FOSS |
+| ECOS | Punto Interior (IPM) | LP, SOCP | Embebido, liviano, preciso |
+| OSQP | ADMM | QP, LP | Escalable, sparse |
+| CVXOPT | Punto Interior (IPM) | LP, QP, SOCP, SDP | Programacion convexa general |
+| SCS | ADMM + Punto Fijo | LP, SOCP, SDP | Muy escalable, grandes problemas |
+| Ipopt | Punto Interior (Barrera) | NLP | Optimizacion no lineal |
+
+
+### Cuando Usar Cada Solver
+
+| Escenario | Solver Recomendado |
+|-----------|-------------------|
+| LP densos, open source | HiGHS |
+| LP simples, portabilidad | GLPK |
+| MIP/MILP robustos | CBC, SCIP |
+| Mejor rendimiento general | Gurobi |
+| Problemas conicos (SOCP) | ECOS, SCS |
+| Optimizacion cuadratica | OSQP, CVXOPT |
+| Programacion convexa general | CVXOPT |
+| Optimizacion no lineal | Ipopt |
+| Problemas muy grandes y sparse | OSQP, SCS |
+
+## Analisis de Sensibilidad
 
 ### Costos Reducidos
 
-Para variable xⱼ en el óptimo:
+Para variable xj en el optimo:
 
 ```
-costo_reducido = coeficiente_objetivo - precio_sombra * coeficiente_restricción
+costo_reducido = coeficiente_objetivo - precio_sombra * coeficiente_restriccion
 ```
 
-- Si costo_reducido > 0 (max): aumentar xⱼ decrease objetivo
-- Si costo_reducido < 0 (max): aumentar xⱼ increase objetivo
+- Si costo_reducido > 0 (max): aumentar xj disminuye objetivo
+- Si costo_reducido < 0 (max): aumentar xj incrementa objetivo
 
 ### Precios Sombra (Valores Duales)
 
-Para restricción i:
+Para restriccion i:
 
 ```
-precio_sombra = d(valor_óptimo) / d(bi)
+precio_sombra = d(valor_optimo) / d(bi)
 ```
 
-Interpretación: El valor marginal de relajar la restricción i por una unidad.
+Interpretacion: El valor marginal de relajar la restriccion i por una unidad.
 
 ### Rangos de Factibilidad
 
-- **Rango RHS**: Rango donde el precio sombra permanece válido
-- **Rango Objetivo**: Rango donde la base permanece óptima
+- **Rango RHS**: Rango donde el precio sombra permanece valido
+- **Rango Objetivo**: Rango donde la base permanece optima
 
-## Análisis de Infactibilidad
+## Analisis de Infactibilidad
 
 ### IIS (Conjunto Infactible Irreducible)
 
 Cuando un problema es infactible:
 
-1. **Calcular IIS**: Encontrar subconjunto infactible mínimo
-2. **Identificar conflictos**: Qué restricciones se contradicen
+1. **Calcular IIS**: Encontrar subconjunto infactible minimo
+2. **Identificar conflictos**: Que restricciones se contradicen
 3. **Sugerir correcciones**: Relajar o eliminar restricciones
 
 ### Problema Dual
@@ -108,11 +145,11 @@ Todo problema primal tiene un dual:
 
 | Primal | Dual |
 |--------|------|
-| max cᵀx | min bᵀy |
-| Ax <= b | Aᵀy >= c |
+| max cTx | min bTy |
+| Ax <= b | ATy >= c |
 | x >= 0 | y >= 0 |
 
-**Dualidad Fuerte**: Si el primal tiene solución óptima, el dual también la tiene con el mismo valor objetivo.
+**Dualidad Fuerte**: Si el primal tiene solucion optima, el dual tambien la tiene con el mismo valor objetivo.
 
 ## Benchmark - Fair Comparison
 
@@ -127,76 +164,83 @@ config = BenchmarkConfig(
 )
 ```
 
-El warmup elimina variaciones de JVM/hotspot.
+El warmup elimina variaciones de JIT/compilacion y cache.
 
-### Métricas de Benchmark
+### Metricas de Benchmark
 
-| Métrica | Descripción |
+| Metrica | Descripcion |
 |---------|------------|
 | parse_time | Tiempo de parsing |
-| build_time | Construcción Polars |
-| solve_time | Resolución solver |
+| build_time | Construccion Polars |
+| solve_time | Resolucion solver |
 | total_time | Tiempo total |
 | memory_used_mb | MemoriaDelta |
 | peak_memory_mb | Pico de memoria |
-| iterations | Iteraciones simplex |
-| nodes | Nodos explorados |
+| iterations | Iteraciones del algoritmo |
+| nodes | Nodos explorados (MILP) |
 
-### Configuración Uniforme
+### Configuracion Uniforme
 
 ```python
-# Misma configuración para todos los solvers
 config = BenchmarkConfig(
-    fairness_mode=True,  # Configuración uniforme
+    fairness_mode=True,
     collect_memory=True,
-    collect_detailed_stats=True
+    collect_detailed_stats=True,
+    time_limit=60.0,  # Timeout para evitar solvers lentos
 )
 ```
 
-## Selección del Algoritmo
+## Convergencia y Precisión
 
-### Cuándo Usar Cada Solver
+### Tolerancias Numericas
 
-| Solver | Mejor Para |
-|--------|----------|
-| HiGHS | LP densos, open source |
-| GLPK | Portabilidad, open source |
-| CBC | MIP simples |
-| Gurobi | Mejor rendimiento general |
+El sistema usa constantes centralizadas en `src/core/constants.py`:
 
-### Configuración
+| Constante | Valor | Proposito |
+|-----------|-------|-----------|
+| FEASIBILITY_TOLERANCE | 1e-6 | Verificar factibilidad de soluciones |
+| OPTIMALITY_TOLERANCE | 1e-6 | Verificar optimalidad |
+| BOUND_TOLERANCE | 1e-9 | Verificar limites de variables |
+| PARSING_TOLERANCE | 1e-10 | Comparaciones numericas en parsing |
+| DEFAULT_INFINITY | 1e30 | Valor predeterminado para infinito |
+
+### Cross-Validation entre Solvers
+
+El sistema puede comparar soluciones de diferentes solvers para detectar discrepancias:
 
 ```python
-from src.solver import BenchmarkRunner, BenchmarkConfig
+from src.core.verification import compare_solutions
 
-config = BenchmarkConfig(
-    warmup_runs=1,
-    runs_per_problem=3,
-    collect_memory=True,
-    fairness_mode=True
-)
+# Comparar 3 solvers en el mismo problema
+warnings = compare_solutions(problem, [sol_gurobi, sol_cbc, sol_scip])
+if warnings:
+    print("Discrepancias encontradas:")
+    for w in warnings:
+        print(f"  - {w}")
 ```
 
 ## Notas de Rendimiento
 
-### Características del Problema
+### Caracteristicas del Problema
 
-| Característica | Impacto |
-|-------------|--------|
-| Variables | Más variables = más columnas |
-| Restricciones | Más restricciones = más filas |
-| Densidad | Matrices densas son más lentas |
-| Degeneración | Puede causar ciclación |
+| Caracteristica | Impacto |
+|---------------|---------|
+| Variables | Mas variables = mas columnas |
+| Restricciones | Mas restricciones = mas filas |
+| Densidad | Matrices densas son mas lentas |
+| Degeneracion | Puede causar ciclacion en Simplex |
+| Escalamiento | Mal escalado afecta la precision numerica |
 
-### Parámetros de Benchmark
+### Parametros de Benchmark
 
 ```python
 config = BenchmarkConfig(
-    warmup_runs=2,       # Warmup iterations
-    runs_per_problem=5,  # Repeticiones
-    time_limit=60,       # Límite por problema
-    verbose=False,        # Salida detallada
-    collect_memory=True   # Métricas de memoria
+    warmup_runs=2,
+    runs_per_problem=5,
+    time_limit=60,
+    verbose=False,
+    collect_memory=True,
+    collect_detailed_stats=True,
 )
 ```
 
@@ -206,7 +250,12 @@ config = BenchmarkConfig(
 
 1. Dantzig, G. B. (1963). *Linear Programming and Extensions*. Princeton University Press.
 2. Bertsimas, D., & Tsitsiklis, J. N. (1997). *Introduction to Linear Optimization*. Athena Scientific.
-3. HiGHS Documentation. *Highs Optimization Solver*.
-4. GLPK Documentation. *GNU Linear Programming Kit*.
+3. Boyd, S. et al. (2011). *Distributed Optimization and Statistical Learning via ADMM*. Foundations and Trends in ML.
+4. Vandenberghe, L. (2010). *The CVXOPT Linear and Quadratic Programming Solver*.
+5. O'Donoghue, B. et al. (2016). *Conic Optimization via Operator Splitting and Homogeneous Self-Dual Embedding*. JOTA.
+6. Domahidi, A. et al. (2013). *ECOS: An SOCP solver for embedded systems*. ECC.
+7. HiGHS Documentation. *Highs Optimization Solver*.
+8. GLPK Documentation. *GNU Linear Programming Kit*.
+9. COIN-OR Documentation. *CBC*.
 
 Para detalles de API, ver [README.md](../README.md).

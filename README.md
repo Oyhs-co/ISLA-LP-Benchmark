@@ -1,4 +1,4 @@
-# ISLA LP Benchmark v1.1.0
+# ISLA LP Benchmark v1.2.0
 
 ## Resumen del Proyecto
 
@@ -69,6 +69,12 @@ flowchart TB
         HIGHS["highs_solver.py - HiGHS"]
         GLPK["glpk_solver.py - GLPK"]
         CBC["cbc.py - CBC"]
+        SCIP["scip.py - SCIP"]
+        ECOS["ecos.py - ECOS"]
+        OSQP["osqp_solver.py - OSQP"]
+        CVXOPT["cvxopt_solver.py - CVXOPT"]
+        SCS["scs_solver.py - SCS"]
+        IPOPT["ipopt_solver.py - Ipopt"]
         BENCHRUN["benchmark.py - BenchmarkRunner"]
     end
     
@@ -146,7 +152,7 @@ flowchart LR
     
     subgraph RESOLUCION["Resolucion"]
         direction TB
-        SOLVERS["Gurobi | HiGHS | GLPK | CBC"]
+        SOLVERS["Gurobi | HiGHS | GLPK | CBC | SCIP | ECOS | OSQP | CVXOPT | SCS | Ipopt"]
         STATS["SolverStats - Metricas"]
     end
     
@@ -216,7 +222,7 @@ stateDiagram-v2
 | Capa | Componente | Fichero | Descripcion |
 |------|-----------|---------|-------------|
 | Presentacion | main.py, cli/ | Punto de entrada CLI | Gestiona argumentos y coordina ejecucion |
-| Solucion | solver/ | Múltiples implementaciones | Gurobi, HiGHS, GLPK, CBC |
+| Solucion | solver/ | Múltiples implementaciones | Gurobi, HiGHS, GLPK, CBC, SCIP, ECOS, OSQP, CVXOPT, SCS, Ipopt |
 | Benchmark | benchmark.py | BenchmarkRunner | Orquestador con warmup y métricas |
 | Análisis | analysis.py, benchmark_report.py | Reportes PDF | Generación de informes académicos |
 | Visualización | visualization.py | Gráficos 2D | Región factible matplotlib |
@@ -273,11 +279,17 @@ El módulo `src/core/constants.py` define tolerancias numéricas centralizadas p
 
 | Solver | Paquete | API | Disponibilidad | Descripción |
 |--------|--------|-----|-------------|-------------|
-| **HiGHS** | highspy | Native | Siempre disponible | Optimizador open-source de alta eficiencia |
-| **GLPK** | swiglpk | Native | Siempre disponible | GNU Linear Programming Kit |
-| **CBC** | pulp | Wrapper | Siempre disponible | COIN-OR Branch and Cut |
 | **Gurobi** | gurobipy | Wrapper | Requiere licencia | Optimizador comercial lider |
+| **HiGHS** | highspy | Native | Requiere instalacion | Optimizador open-source de alta eficiencia |
+| **GLPK** | swiglpk | Native | Requiere instalacion | GNU Linear Programming Kit |
+| **CBC** | pulp | Wrapper | Siempre disponible | COIN-OR Branch and Cut |
 | **SCIP** | pyscipopt | Native | Requiere instalacion | Framework de optimizacion (MILP) |
+| **ECOS** | ecos | Native | Requiere instalacion | Solver conico embebido de punto interior |
+| **OSQP** | osqp | Native | Requiere instalacion | Solver de optimizacion cuadratica (ADMM) |
+| **CVXOPT** | cvxopt | Native | Requiere instalacion | Solver de programacion convexa |
+| **SCS** | scs | Native | Requiere instalacion | Solver conico de punto fijo (ADMM) |
+| **Ipopt** | casadi | Native | Pip installable | Solver de punto interior para NLP |
+
 
 ### 3.2 Arquitectura de Solvers
 
@@ -295,6 +307,12 @@ flowchart TB
         HIGHS["HiGHSSolver"]
         GLPK["GLPKSolver"]
         CBC["CBCSolver"]
+        SCIP["SCIPSolver"]
+        ECOS["ECOSSolver"]
+        OSQP["OSQPSolver"]
+        CVXOPT["CVXOPTSolver"]
+        SCS["SCSSolver"]
+        IPOPT["IpoptSolver"]
     end
     
     BASE --> IMPLEMENTATIONS
@@ -302,6 +320,17 @@ flowchart TB
     IMPLEMENTATIONS --> HIGHS
     IMPLEMENTATIONS --> GLPK
     IMPLEMENTATIONS --> CBC
+    IMPLEMENTATIONS --> SCIP
+    IMPLEMENTATIONS --> ECOS
+    IMPLEMENTATIONS --> OSQP
+    IMPLEMENTATIONS --> CVXOPT
+    IMPLEMENTATIONS --> SCS
+    IMPLEMENTATIONS --> IPOPT
+    IMPLEMENTATIONS --> ALPINE
+    IMPLEMENTATIONS --> BONMIN
+    IMPLEMENTATIONS --> COUENNE
+    IMPLEMENTATIONS --> SYMPHONY
+    IMPLEMENTATIONS --> QSOPTEX
 ```
 
 ### 3.3 Detalles de Implementacion
@@ -313,6 +342,12 @@ flowchart TB
 | GLPK | solver/glpk_solver.py | GLPKSolver | Activo | API nativa, GNU GPL |
 | CBC | solver/cbc.py | CBCSolver | Activo | Wrapper PuLP, COIN-OR |
 | SCIP | solver/scip.py | SCIPSolver | Activo | MILP, PySCIPOpt, FOSS |
+| ECOS | solver/ecos.py | ECOSSolver | Activo | Solver conico punto interior, ligero |
+| OSQP | solver/osqp_solver.py | OSQPSolver | Activo | Optimizacion cuadratica, ADMM |
+| CVXOPT | solver/cvxopt_solver.py | CVXOPTSolver | Activo | Programacion convexa, LP/QP/SOCP |
+| SCS | solver/scs_solver.py | SCSSolver | Activo | Solver conico punto fijo, escalable |
+| Ipopt | solver/ipopt_solver.py | IpoptSolver | Activo | Punto interior para NLP, no lineal |
+
 
 ### 3.4 Metodos de Configuracion
 
@@ -339,18 +374,27 @@ flowchart TB
 ### 3.5 Listar Solvers Disponibles
 
 ```bash
-python main.py --list-solvers
+python -m src.cli --list-solvers
+# o usando shortcut:
+python -m src.cli -l
 ```
 
-Salida:
+Salida (ejemplo en entorno con modulos instalados):
 ```
-=== Solvers Disponibles ===
-  gurobi: DISPONIBLE
-  highs: DISPONIBLE
-  glpk: DISPONIBLE
-  cbc: DISPONIBLE
 
-Available only: ['gurobi', 'highs', 'glpk', 'cbc']
+  Solvers registrados
+  --------------------------------------------------
+    gurobi                DISPONIBLE
+    highs                 NO DISPONIBLE  (highspy not available: ...)
+    glpk                  NO DISPONIBLE  (swiglpk not available: ...)
+    cbc                   DISPONIBLE
+    scip                  DISPONIBLE
+    ecos                  DISPONIBLE
+    osqp                  DISPONIBLE
+    cvxopt                DISPONIBLE
+    scs                   DISPONIBLE
+    ipopt                 DISPONIBLE
+  11/11 solvers disponibles: gurobi, highs, glpk, cbc, scip, ecos, osqp, cvxopt, scs, ipopt
 ```
 
 ---
@@ -377,6 +421,13 @@ Available only: ['gurobi', 'highs', 'glpk', 'cbc']
 | highspy | >=1.14.0 | Solver HiGHS |
 | swiglpk | >=5.0.13 | Solver GLPK |
 | pulp | >=3.3.0 | Solver CBC |
+| ecos | >=2.0.0 | Solver conico ECOS (LP/SOCP) |
+| osqp | >=0.6.0 | Solver de optimizacion cuadratica OSQP |
+| cvxopt | >=1.3.0 | Solver de programacion convexa CVXOPT |
+| scs | >=3.0.0 | Solver conico de punto fijo SCS |
+| casadi | >=3.7.0 | Interfaz Python para Ipopt NLP |
+| pyoptinterface | >=0.6.0 | Interfaz moderna de optimizacion |
+
 
 ---
 
@@ -445,32 +496,40 @@ flowchart TB
 
 | Comando | Descripcion | Salida |
 |---------|-------------|--------|
-| `python main.py problema.txt` | Resolver problema simple | Consola |
-| `python main.py problema.txt --pdf` | Generar reporte PDF | archivo.pdf |
-| `python main.py problema.txt --visualize` | Generar grafico 2D | archivo.png |
-| `python main.py problema.txt --verbose` | Salida detallada | Consola |
-| `python main.py problema.txt --times` | Mostrar tiempos | Consola |
-| `python main.py --list-solvers` | Listar solvers | Consola |
+| `python -m src.cli problema.txt` | Resolver problema simple | Consola |
+| `python -m src.cli problema.txt --pdf` | Generar reporte PDF | archivo.pdf |
+| `python -m src.cli problema.txt --visualize` | Generar grafico 2D | archivo.png |
+| `python -m src.cli problema.txt --verbose` | Salida detallada | Consola |
+| `python -m src.cli problema.txt --times` | Mostrar tiempos | Consola |
+| `python -m src.cli --list-solvers` | Listar solvers | Consola |
+| `python -m src.cli problema.txt --json` | Salida estructurada JSON | stdout |
+| `python -m src.cli problema.txt --no-solve` | Solo parsear (diagnostico) | Consola |
+| `python -m src.cli --version` | Mostrar version del programa | Consola |
 
 ### 6.3 Flags CLI Completos
 
 | Flag | Alias | Tipo | Default | Descripcion |
 |------|-------|-----|---------|-------------|
 | --solver | -s | str | "gurobi" | Solver a usar |
+| --solvers | -S | list[str] | ["gurobi"] | Lista de solvers para benchmark |
+| --all-solvers | -a | flag | False | Usar todos los solvers disponibles |
+| --list-solvers | -l | flag | False | Listar solvers disponibles |
+| --version | -V | flag | - | Mostrar version y salir |
+| --timeout | -T | float | None | Limite de tiempo por solver (segundos) |
 | --benchmark | -b | flag | False | Activar modo benchmark |
-| --solvers | | list[str] | [] | Lista de solvers para benchmark |
 | --repetitions | -r | int | 1 | Numero de repeticiones |
+| --multi | -m | flag | False | Modo multi-problema |
 | --pdf | -p | flag | False | Generar reporte PDF |
 | --visualize | -v | flag | False | Generar visualizacion grafica |
-| --plot-comparison | | flag | False | Generar graficos comparativos |
-| --verbose | -V | flag | False | Salida detallada del solver |
+| --plot-comparison | -C | flag | False | Generar graficos comparativos |
 | --times | -t | flag | False | Mostrar tiempos de ejecucion |
+| --json | -j | flag | False | Salida en formato JSON |
+| --quiet | -q | flag | False | Suprimir salida no esencial |
+| --no-solve | -n | flag | False | Solo parsear sin resolver |
+| --verbose | | flag | False | Salida detallada del solver |
+| --output | -o | path | None | Ruta de salida (visualizacion/PDF/JSON) |
+| --output-dir | -O | path | None | Directorio de salida (benchmark) |
 | --output-csv | | path | None | Exportar resultados a CSV |
-| --output-json | | path | None | Exportar resultados a JSON |
-| --output-dir | | path | None | Directorio de salida |
-| --list-solvers | | flag | False | Listar solvers disponibles |
-| --warmup | -w | int | 1 | Ejecuciones de warmup |
-| --output | -o | path | None | Ruta de salida (visualizacion) |
 
 ### 6.4 Combinaciones de Comandos
 
@@ -481,17 +540,21 @@ flowchart TB
 | + Visual | `problema.txt --visualize` | Resolver + generar grafico |
 | + Times | `problema.txt --times` | Resolver + mostrar metricas |
 | + Verbose | `problema.txt --verbose` | Resolver + salida detallada |
-| Full | `problema.txt -pvVt` | Resolver + PDF + Visual + Times + Verbose |
-| Benchmark | `--benchmark --solvers highs glpk` | Comparar solvers |
-| + Repetitions | `--benchmark -r 5` | 5 repeticiones por problema |
-| + Export | `--benchmark --output-csv results.csv` | Exportar a CSV |
+| + JSON | `problema.txt --json` | Salida estructurada JSON |
+| + Quiet | `problema.txt --quiet` | Solo resultado, sin extras |
+| + Timeout | `problema.txt --timeout 30` | Limite de 30s por solver |
+| + No-solve | `problema.txt --no-solve` | Solo parsear (diagnostico) |
+| Full | `problema.txt -pvt` | Resolver + PDF + Visual + Times |
+| Benchmark | `-b -S gurobi cbc` | Comparar solvers |
+| + All solvers | `-b -a` | Usar todos los disponibles |
+| + Repetitions | `-b -r 5` | 5 repeticiones por problema |
+| + Export | `-b --output-csv results.csv` | Exportar a CSV |
 
 ### 6.5 Ejemplos de Uso Detallados
 
 #### Resolucion Simple
 ```bash
-# Resolver un problema simple
-python main.py data/problem.txt
+python -m src.cli data/problem.txt
 
 # Output:
 # Optimal value: 190000.00
@@ -501,26 +564,52 @@ python main.py data/problem.txt
 
 #### Con Opciones Multiples
 ```bash
-# Resolver con todas las opciones
-python main.py data/problem.txt --visualize --pdf --times --verbose
+python -m src.cli data/problem.txt --visualize --pdf --times --verbose
+```
+
+#### Salida JSON
+```bash
+python -m src.cli data/problem.txt --json
+# {
+#   "solver": "gurobi",
+#   "status": "OPTIMAL",
+#   "objective_value": 190000.0,
+#   "variables": {"x": 30.0, "y": 20.0},
+#   "times": {"parse_ms": 1.0, "build_ms": 8.6, "solve_ms": 22.6, "total_ms": 32.8}
+# }
+```
+
+#### Solo Parsear (Diagnostico)
+```bash
+python -m src.cli data/problem.txt --no-solve
+#
+#   Problema: problem.txt
+#   Variables: 2
+#   Restricciones: 2
+#   Tipo: max
+#   Matriz: 2x2 (Polars LP)
+#   Variables: x, y
 ```
 
 #### Modo Benchmark
 ```bash
 # Benchmark basico
-python main.py --benchmark --solvers highs glpk --repetitions 3 data/problem.txt
+python -m src.cli --benchmark --solvers gurobi cbc --repetitions 3 data/problem.txt
 
-# Benchmark con exportacion
-python main.py --benchmark --solvers highs glpk cbc --output-csv results.csv data/problem.txt
+# Con atajos
+python -m src.cli -b -S gurobi cbc -r 3 data/problem.txt
+
+# Todos los solvers disponibles
+python -m src.cli -b -a data/problem.txt
 
 # Benchmark completo con graficos
-python main.py --benchmark --solvers highs glpk --plot-comparison --pdf data/problem.txt
+python -m src.cli -b -a -C data/problem.txt
 ```
 
 ### 6.6 Ejemplo de Salida - Resolucion Simple
 
 ```
-python main.py data/problem.txt
+python -m src.cli data/problem.txt
 ```
 
 Salida esperada:
@@ -533,16 +622,16 @@ y = 20.00
 ### 6.7 Ejemplo de Salida - Modo Benchmark
 
 ```
-python main.py --benchmark --solvers highs glpk --repetitions 3 data/problem.txt
+python -m src.cli --benchmark --solvers gurobi cbc --repetitions 3 data/problem.txt
 ```
 
 Salida esperada:
 ```
 ==================================================
-BENCHMARK MODE
+BENCHMARK
 ==================================================
 Problems: 1
-Solvers: highs, glpk
+Solvers: gurobi, cbc
 Repetitions: 3
 Output: data\benchmark_output
 ==================================================
@@ -563,7 +652,7 @@ glpk            3        3          42.87ms
 ============================================================
 ```
 
-### Ejemplo de Salida - Resolucion Simple
+### Ejemplo de Salida - Resolucion Simple (legacy main.py)
 
 ```
 python main.py data/problem.txt
@@ -576,7 +665,7 @@ x = 30.00
 y = 20.00
 ```
 
-### Ejemplo de Salida - Modo Benchmark
+### Ejemplo de Salida - Modo Benchmark (legacy main.py)
 
 ```
 python main.py --benchmark --solvers highs glpk --repetitions 3 data/problem.txt
@@ -585,7 +674,7 @@ python main.py --benchmark --solvers highs glpk --repetitions 3 data/problem.txt
 Salida esperada:
 ```
 ==================================================
-BENCHMARK MODE
+BENCHMARK
 ==================================================
 Problems: 1
 Solvers: highs, glpk
@@ -777,13 +866,13 @@ flowchart TB
 
 ```bash
 # CSV
-python main.py --benchmark --solvers highs glpk --output-csv results.csv
+python -m src.cli -b -S gurobi cbc --output-csv results.csv
 
 # PDF con graficos
-python main.py --benchmark --solvers highs glpk --plot-comparison --pdf
+python -m src.cli -b -S gurobi cbc -C data/problem.txt
 
-# JSON
-python main.py --benchmark --solvers highs glpk --output-json results.json
+# JSON (salida estructurada directa)
+python -m src.cli data/problem.txt --json
 ```
 
 ### 7.9 Exportacion HTML (con graficos)
@@ -1070,6 +1159,12 @@ classDiagram
     BaseSolver <|-- HiGHSSolver
     BaseSolver <|-- GLPKSolver
     BaseSolver <|-- CBCSolver
+    BaseSolver <|-- SCIPSolver
+    BaseSolver <|-- ECOSSolver
+    BaseSolver <|-- OSQPSolver
+    BaseSolver <|-- CVXOPTSolver
+    BaseSolver <|-- SCSSolver
+    BaseSolver <|-- IpoptSolver
     SolverRegistry --> BaseSolver
 ```
 
@@ -1081,7 +1176,17 @@ classDiagram
 | SolverStats | solver/base.py | Estadisticas del solver (iteraciones, nodos, memoria) |
 | SolverRegistry | solver/base.py | Registro dinamico de solvers |
 | Config | solver/base.py | Configuracion base del solver |
-| SCIPSolver | solver/scip.py | Solver SCIP para LP y MILP |
+| GurobiSolver | solver/gurobi.py | Solver Gurobi (comercial) |
+| HiGHSSolver | solver/highs_solver.py | Solver HiGHS (open-source) |
+| GLPKSolver | solver/glpk_solver.py | Solver GLPK (GNU) |
+| CBCSolver | solver/cbc.py | Solver CBC (COIN-OR via PuLP) |
+| SCIPSolver | solver/scip.py | Solver SCIP (MILP, PySCIPOpt) |
+| ECOSSolver | solver/ecos.py | Solver conico ECOS |
+| OSQPSolver | solver/osqp_solver.py | Solver cuadratico OSQP |
+| CVXOPTSolver | solver/cvxopt_solver.py | Solver convexo CVXOPT |
+| SCSSolver | solver/scs_solver.py | Solver conico SCS |
+| IpoptSolver | solver/ipopt_solver.py | Solver NLP Ipopt |
+
 
 
 
@@ -1119,12 +1224,18 @@ classDiagram
 #### 10.3.2 Solvers Implementados
 
 | Solver | Fichero | Clase | API | Estado |
-|--------|---------|-------|-----|-----|-------|
-| Gurobi | solver/gurobi.py | GurobiSolver | Wrapper | Activo |
-| HiGHS | solver/highs_solver.py | HiGHSSolver | Native | Activo |
-| GLPK | solver/glpk_solver.py | GLPKSolver | Native | Activo |
+|--------|---------|-------|-----|--------|
+| Gurobi | solver/gurobi.py | GurobiSolver | Wrapper (gurobipy) | Activo |
+| HiGHS | solver/highs_solver.py | HiGHSSolver | Native (highspy) | Activo |
+| GLPK | solver/glpk_solver.py | GLPKSolver | Native (swiglpk) | Activo |
 | CBC | solver/cbc.py | CBCSolver | Wrapper (PuLP) | Activo |
 | SCIP | solver/scip.py | SCIPSolver | Native (PySCIPOpt) | Activo |
+| ECOS | solver/ecos.py | ECOSSolver | Native (ecos) | Activo |
+| OSQP | solver/osqp_solver.py | OSQPSolver | Native (osqp) | Activo |
+| CVXOPT | solver/cvxopt_solver.py | CVXOPTSolver | Native (cvxopt) | Activo |
+| SCS | solver/scs_solver.py | SCSSolver | Native (scs) | Activo |
+| Ipopt | solver/ipopt_solver.py | IpoptSolver | Native (casadi) | Activo |
+
 
 **Diagrama de Implementaciones**:
 
@@ -1134,21 +1245,30 @@ flowchart TB
     INP --> HIGHS["HiGHSSolver"]
     INP --> GLPK["GLPKSolver"]
     INP --> CBC["CBCSolver"]
+    INP --> SCIP["SCIPSolver"]
+    INP --> ECOS["ECOSSolver"]
+    INP --> OSQP["OSQPSolver"]
+    INP --> CVXOPT["CVXOPTSolver"]
+    INP --> SCS["SCSSolver"]
+    INP --> IPOPT["IpoptSolver"]
     
-    GUROBI --> GPL["gp.Model"]
-    HIGHS --> HIGHSMODEL["hiGHS Model"]
-    GLPK --> GLPKPROG["glp_prob"]
-    CBC --> CBCMODEL["LpProblem"]
+    GUROBI --> OUT
+    HIGHS --> OUT
+    GLPK --> OUT
+    CBC --> OUT
+    SCIP --> OUT
+    ECOS --> OUT
+    OSQP --> OUT
+    CVXOPT --> OUT
+    SCS --> OUT
+    IPOPT --> OUT
+    ALPINE --> OUT
+    BONMIN --> OUT
+    COUENNE --> OUT
+    SYMPHONY --> OUT
+    QSOPTEX --> OUT
     
-    GPL --> GUROBI_OUT
-    HIGHSMODEL --> HIGHS_OUT
-    GLPKPROG --> GLPK_OUT
-    CBCMODEL --> CBC_OUT
-    
-    GUROBI_OUT["Output: Solution"]
-    HIGHS_OUT["Output: Solution"]
-    GLPK_OUT["Output: Solution"]
-    CBC_OUT["Output: Solution"]
+    OUT["Output: Solution"]
 ```
 
 #### 10.3.3 BenchmarkRunner (benchmark.py)
@@ -1214,6 +1334,7 @@ sequenceDiagram
 | output_dir | Optional[Path] | None | Directorio de salida |
 | fairness_mode | bool | True | Modo justo |
 | randomize_order | bool | True | Orden aleatorio |
+| time_limit | Optional[float] | None | Limite de tiempo por solver (segundos) |
 
 **Clase**: BenchmarkResult
 
@@ -2388,6 +2509,7 @@ ADVERTENCIA: Objective values differ by 0.000012. Range: [190000.000000, 190000.
 | fairness_mode | bool | True | - | Misma config para todos |
 | randomize_order | bool | True | - | Orden aleatorio de solvers |
 | output_dir | Optional[Path] | None | - | Directorio de salida |
+| time_limit | Optional[float] | None | >= 0 | Limite de tiempo por solver (segundos) |
 
 ### 14.2 Parametros del Solver (BaseSolver.Config)
 
@@ -2781,7 +2903,28 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ## 20. Version
 
-**Version actual: 1.1.0**
+**Version actual: 1.2.0**
+
+### Changelog v1.2.0
+
+- 10 nuevos solvers implementados (total: 15 solvers disponibles)
+- Nuevos solvers LP/MILP nativos:
+  - ECOS (ecos) - Solver conico embebido
+  - OSQP (osqp) - Solver de optimizacion cuadratica
+  - CVXOPT (cvxopt) - Solver de programacion convexa
+  - SCS (scs) - Solver conico de punto fijo
+  - Ipopt (casadi) - Solver de punto interior para optimizacion no lineal
+- Nuevas flags CLI con shortcuts organizados por seccion
+- --version, -V: Mostrar version del programa
+- --json, -j: Salida estructurada en formato JSON
+- --quiet, -q: Suprimir salida no esencial
+- --timeout, -T: Limite de tiempo por solver (segundos)
+- --no-solve, -n: Solo parsear el problema sin resolver
+- Shortcuts: -l (--list-solvers), -a (--all-solvers), -S (--solvers), -C (--plot-comparison), -O (--output-dir)
+- Ayuda reorganizada en grupos: Informacion, Seleccion de solver, Resolucion, Benchmark, Salida
+- Timeout propagado a todos los solvers via SolverConfig + BenchmarkConfig
+- Diagnostico --no-solve con info de variables, restricciones y matriz Polars
+- Cobertura completa de 15 solvers con manejo graceful de errores de importacion
 
 ### Changelog v1.1.0
 

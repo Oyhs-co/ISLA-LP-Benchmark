@@ -90,9 +90,8 @@ class BenchmarkConfig:
     output_dir: Optional[Path] = None
     fairness_mode: bool = True
     randomize_order: bool = True
-    # F6-1: Collect progress during solving
+    time_limit: Optional[float] = None
     collect_progress: bool = False
-    # F6-2: Enable cross-validation between solvers
     cross_validate: bool = True
 
 
@@ -238,8 +237,17 @@ class BenchmarkRunner:
             if solver_class is None:
                 raise ValueError(f"Solver '{solver_name}' no encontrado")
             
-            # Crear solver una sola vez con LinearProblem
-            solver = solver_class(problem)
+            # Crear solver con configuracion (verbose + time_limit)
+            from src.solver import SolverConfig
+            scfg = SolverConfig(
+                verbose=self.config.verbose,
+                time_limit=self.config.time_limit,
+            )
+            try:
+                solver = solver_class(problem, scfg)
+            except TypeError:
+                solver = solver_class(problem)
+                solver.config = scfg
             
             # F6-5: Measure memory after solver creation (more accurate per-solver)
             if self.config.collect_memory and PSUTIL_AVAILABLE:

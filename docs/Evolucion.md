@@ -17,6 +17,41 @@
 
 ## Historial de Cambios
 
+### v1.2.0 (2026-05-13)
+
+#### Nuevas Funcionalidades
+- 10 nuevos solvers implementados: ECOS, OSQP, CVXOPT, SCS, Ipopt
+- Total de 10 solvers disponibles con registro dinamico via SolverRegistry
+- Nuevas flags CLI con shortcuts organizados por seccion:
+  - `--version` / `-V`: Mostrar version del programa
+  - `--json` / `-j`: Salida estructurada en formato JSON
+  - `--quiet` / `-q`: Suprimir salida no esencial
+  - `--timeout` / `-T`: Limite de tiempo por solver (segundos)
+  - `--no-solve` / `-n`: Solo parsear el problema sin resolver
+  - Shortcuts: `-l` (--list-solvers), `-a` (--all-solvers), `-S` (--solvers), `-C` (--plot-comparison), `-O` (--output-dir)
+- Ayuda del CLI reorganizada en grupos: Informacion, Seleccion de solver, Resolucion, Benchmark, Salida
+- Timeout propagado a todos los solvers via SolverConfig.time_limit + BenchmarkConfig.time_limit
+- Diagnostico --no-solve con informacion de variables, restricciones y matriz Polars
+- Cobertura completa de 11 solvers con manejo graceful de errores de importacion
+
+#### Nuevos Solvers
+- **ECOS** (`ecos`): Solver conico embebido de punto interior para LP y SOCP
+- **OSQP** (`osqp`): Solver de optimizacion cuadratica basado en ADMM
+- **CVXOPT** (`cvxopt`): Solver de programacion convexa para LP, QP y SOCP
+- **SCS** (`scs`): Solver conico de punto fijo escalable (ADMM)
+- **Ipopt** (`casadi`): Solver de punto interior para optimizacion no lineal
+
+#### CLI
+- Ayuda reorganizada con argumentos agrupados por seccion
+- Nuevo formateador personalizado: muestra valores por defecto automaticamente
+- Tabla de solvers alineada con contador de disponibilidad
+- Shortcuts para todas las flags de uso frecuente
+
+#### Documentacion
+- README actualizado a v1.2.0 con changelog completo
+- Tablas de solvers, dependencias y flags actualizadas
+- Diagramas de arquitectura extendidos con nuevos solvers
+
 ### v1.0.0 (2026-04-23)
 
 #### Nuevas Funcionalidades

@@ -3,31 +3,15 @@ SCIP Solver for linear and mixed-integer programming.
 Implements using PySCIPOpt (interface to SCIP).
 """
 
-import sys
-import os
 import time
 from typing import Optional
 
-# Add project root to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+import pyscipopt as scip
 
-try:
-    import pyscipopt as scip
-    SCIP_AVAILABLE = True
-except ImportError:
-    SCIP_AVAILABLE = False
-    scip = None
-
-try:
-    from src.core import LinearProblem, Solution
-    from src.solver.base import BaseSolver, SolverStats, register_solver
-except ImportError:
-    # Fallback for when running as module
-    from ..core import LinearProblem, Solution
-    from .base import BaseSolver, SolverStats, register_solver
+from ..core import LinearProblem, Solution
+from .base import BaseSolver, SolverStats
 
 
-@register_solver("scip")
 class SCIPSolver(BaseSolver):
     """SCIP Solver for linear and mixed-integer programming."""
     
@@ -43,26 +27,17 @@ class SCIPSolver(BaseSolver):
     
     @property
     def solver_version(self) -> str:
-        if SCIP_AVAILABLE:
-            try:
-                return scip.__version__
-            except:
-                return "SCIP"
-        return "Not available"
+        try:
+            return scip.__version__
+        except:
+            return "SCIP"
     
     @property
     def is_available(self) -> bool:
-        return SCIP_AVAILABLE
+        return True
     
     def solve(self) -> Solution:
         """Solves the problem."""
-        if not SCIP_AVAILABLE:
-            return Solution(
-                status="ERROR: SCIP not available",
-                objective_value=None,
-                variables={},
-            )
-        
         problem = self.problem
         
         if problem is None:

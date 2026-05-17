@@ -19,4 +19,4 @@ z free
 problem = LPParser(problem_text).parse()
 lp = LPBuilder(problem).build()
 
-SolverLP(lp=lp).solve()
+SolverLP(problem).solve()

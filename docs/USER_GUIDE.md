@@ -1,15 +1,15 @@
-# Guía de Usuario - ISLA LP Benchmark
+# Guia de Usuario - ISLA LP Benchmark v1.2.0
 
-Esta guía es para **usuarios finales** que quieren resolver y comparar problemas de Programación Lineal.
+Esta guia es para **usuarios finales** que quieren resolver y comparar problemas de Programacion Lineal.
 
-## ¿Qué es Este Proyecto?
+## Que es Este Proyecto?
 
 ISLA LP Benchmark es una plataforma de benchmarking que permite:
-- Resolver problemas de Programación Lineal (PL)
-- Comparar múltiples solvers (HiGHS, GLPK, CBC, Gurobi)
-- Generar métricas y reportes comparativos
+- Resolver problemas de Programacion Lineal (PL) y MILP
+- Comparar multiples solvers (15 motores de optimizacion)
+- Generar metricas y reportes comparativos en PDF, CSV, JSON y HTML
 
-## Inicio Rápido
+## Inicio Rapido
 
 ### 1. Instalar Dependencias
 
@@ -20,47 +20,55 @@ poetry install
 ### 2. Listar Solvers Disponibles
 
 ```bash
-python main.py --list-solvers
+python -m src.cli --list-solvers
+# o usando shortcut:
+python -m src.cli -l
 ```
 
 ### 3. Resolver un Problema
 
 ```bash
-python main.py problema.txt
+python -m src.cli problema.txt
 ```
 
 ### 4. Ejecutar Benchmark
 
 ```bash
-python main.py --benchmark --solvers highs glpk --repetitions 1 problema.txt
+python -m src.cli -b -S gurobi cbc -r 3 problema.txt
 ```
 
 ## Modo Benchmark
 
-### Ejecución Básica
+### Ejecucion Basica
 
 ```bash
-# Benchmark con múltiples solvers
-python main.py --benchmark --solvers highs glpk cbc --repetitions 3 problema.txt
+# Benchmark con solvers especificos
+python -m src.cli -b -S gurobi cbc -r 3 problema.txt
 
-# Benchmark con gráficos comparativos
-python main.py --benchmark --solvers highs glpk --plot-comparison --pdf problema.txt
+# Con todos los solvers disponibles
+python -m src.cli -b -a problema.txt
 
-# Benchmark con visualización
-python main.py --benchmark --solvers highs glpk --visualize problema.txt
+# Con graficos comparativos
+python -m src.cli -b -S gurobi cbc -C problema.txt
+
+# Con limite de tiempo
+python -m src.cli -b -a -T 30 problema.txt
 ```
 
 ### Flags de Benchmark
 
-| Flag | Descripción |
-|------|------------|
-| `--benchmark` | Activa modo benchmark |
-| `--solvers` | Lista de solvers a usar |
-| `--repetitions` | Número de repeticiones |
-| `--plot-comparison` | Generar gráficos comparativos |
-| `--pdf` | Generar reporte PDF |
-| `--output-csv` | Exportar a CSV |
-| `--output-dir` | Directorio de salida |
+| Flag | Alias | Descripcion |
+|------|-------|------------|
+| `--benchmark` | `-b` | Activa modo benchmark |
+| `--solvers` | `-S` | Lista de solvers a usar (ej: `-S gurobi cbc`) |
+| `--all-solvers` | `-a` | Usar todos los solvers disponibles |
+| `--repetitions` | `-r` | Numero de repeticiones |
+| `--timeout` | `-T` | Limite de tiempo por solver (segundos) |
+| `--plot-comparison` | `-C` | Generar graficos comparativos |
+| `--output-csv` | | Exportar resultados a CSV |
+| `--output-dir` | `-O` | Directorio de salida |
+| `--pdf` | `-p` | Generar reporte PDF |
+| `--quiet` | `-q` | Suprimir salida no esencial |
 
 ### Ejemplo de Salida
 
@@ -76,25 +84,29 @@ Por Solver:
 ------------------------------------------------------------
 Solver          Runs     Exitosos   Tiempo Promedio
 ------------------------------------------------------------
-highs           2        2          45.23ms
-glpk            2        2          42.87ms
-cbc            2        2          48.15ms
+gurobi          3        3          16.12ms
+cbc             3        3          111.32ms
 ============================================================
 ```
 
 ## Solvers Disponibles
 
-| Solver | Paquete | Disponibilidad |
-|--------|---------|---------------|
-| HiGHS | highspy | ✅ Siempre disponible |
-| GLPK | swiglpk | ✅ Siempre disponible |
-| CBC | pulp | ✅ Siempre disponible |
-| Gurobi | gurobipy | ⚠️ Requiere licencia |
-| SCIP | pyscipopt | ⚠️ Requiere instalacion |
+| Solver | Paquete | API | Disponibilidad |
+|--------|---------|-----|---------------|
+| Gurobi | gurobipy | Wrapper | Requiere licencia |
+| HiGHS | highspy | Native | Requiere instalacion |
+| GLPK | swiglpk | Native | Requiere instalacion |
+| CBC | pulp | Wrapper | Siempre disponible |
+| SCIP | pyscipopt | Native | Requiere instalacion |
+| ECOS | ecos | Native | Requiere instalacion |
+| OSQP | osqp | Native | Requiere instalacion |
+| CVXOPT | cvxopt | Native | Requiere instalacion |
+| SCS | scs | Native | Requiere instalacion |
+| Ipopt | casadi | Native | Pip installable |
 
-**Nota**: SCIP soporta programacion lineal y entera (MILP).
+**Nota**: Gurobi, SCIP, CBC, ECOS, OSQP, CVXOPT y SCS soportan MILP (variables enteras y binarias).
 
-## Resolución Simple
+## Resolucion Simple
 
 ### 1. Crear Archivo de Problema
 
@@ -111,7 +123,7 @@ y >= 0
 ### 2. Ejecutar
 
 ```bash
-python main.py problema.txt
+python -m src.cli problema.txt
 ```
 
 ### 3. Resultados
@@ -122,9 +134,42 @@ x = 30.00
 y = 20.00
 ```
 
+### Salida JSON
+
+```bash
+python -m src.cli problema.txt --json
+```
+
+Salida:
+```json
+{
+  "solver": "gurobi",
+  "status": "OPTIMAL",
+  "objective_value": 190000.0,
+  "variables": {"x": 30.0, "y": 20.0},
+  "times": {"parse_ms": 1.0, "build_ms": 8.6, "solve_ms": 22.6, "total_ms": 32.8}
+}
+```
+
+### Solo Parsear (Diagnostico)
+
+```bash
+python -m src.cli problema.txt --no-solve
+```
+
+Salida:
+```
+  Problema: problema.txt
+  Variables: 2
+  Restricciones: 2
+  Tipo: max
+  Matriz: 2x2 (Polars LP)
+  Variables: x, y
+```
+
 ## Formato de Problemas
 
-### Función Objetivo
+### Funcion Objetivo
 
 ```
 max: 3000x + 5000y
@@ -139,16 +184,25 @@ x + y <= 100
 x + y = 75
 ```
 
-### Límites de Variables
+### Limites de Variables
 
 ```
-x >= 0         # límite inferior
-y <= 50        # límite superior
-x free         # sin límites
-0 <= x <= 100  # ambos límites
+x >= 0         # limite inferior
+y <= 50        # limite superior
+x free         # sin limites
+0 <= x <= 100  # ambos limites
 ```
 
-### Múltiples Problemas
+### Variables Enteras y Binarias (MILP)
+
+```
+x int          # Variable entera
+y binary       # Variable binaria (0 o 1)
+z integer      # Equivalente a int
+w bin          # Equivalente a binary
+```
+
+### Multiples Problemas
 
 ```
 max: x + 2y
@@ -164,38 +218,57 @@ x >= 0; y >= 0
 
 ## Opciones CLI
 
-### Resolución Simple
+### Resolucion Simple
 
-| Opción | Descripción |
-|--------|-------------|
-| `--solver` | Solver a usar (gurobi, highs, glpk, cbc) |
-| `--visualize` | Generar gráfico |
-| `--pdf` | Generar informe PDF |
-| `--verbose` | Salida detallada |
-| `--times` | Mostrar tiempos |
+| Opcion | Alias | Descripcion |
+|--------|-------|-------------|
+| `--solver` | `-s` | Solver a usar |
+| `--multi` | `-m` | Modo multi-problema |
+| `--visualize` | `-v` | Generar grafico 2D |
+| `--pdf` | `-p` | Generar informe PDF |
+| `--times` | `-t` | Mostrar tiempos de ejecucion |
+| `--json` | `-j` | Salida estructurada JSON |
+| `--no-solve` | `-n` | Solo parsear sin resolver |
+| `--timeout` | `-T` | Limite de tiempo por solver (seg) |
+| `--quiet` | `-q` | Suprimir salida no esencial |
+| `--verbose` | | Salida detallada |
+| `--output` | `-o` | Ruta de salida para archivos |
+
+### Informacion
+
+| Opcion | Alias | Descripcion |
+|--------|-------|-------------|
+| `--list-solvers` | `-l` | Listar solvers disponibles |
+| `--version` | `-V` | Mostrar version del programa |
 
 ### Comandos de Ejemplo
 
 ```bash
-# Solo resolver
-python main.py problema.txt
+# Resolver con solver especifico
+python -m src.cli problema.txt -s cbc
 
-# Con gráfico
-python main.py problema.txt --visualize
+# Con grafico + PDF + tiempos
+python -m src.cli problema.txt -v -p -t
 
-# Con informe PDF
-python main.py problema.txt --pdf
+# Salida JSON
+python -m src.cli problema.txt -j
 
-# Resolver con solver específico
-python main.py problema.txt --solver highs
+# Con limite de tiempo
+python -m src.cli problema.txt -T 30
 
-# Todo junto
-python main.py problema.txt --visualize --pdf --times
+# Diagnostico (solo parsear)
+python -m src.cli problema.txt -n
+
+# Modo silencioso (solo resultado)
+python -m src.cli problema.txt -q
+
+# Version
+python -m src.cli --version
 ```
 
-## Múltiples Problemas
+## Multiples Problemas
 
-El sistema soporta resolver múltiples problemas desde un solo archivo usando delimitadores (`---`, `===`, `___`).
+El sistema soporta resolver multiples problemas desde un solo archivo usando delimitadores (`---`, `===`, `___`).
 
 ### Archivo Multi-Problema
 ```
@@ -212,23 +285,21 @@ x >= 0; y >= 0
 
 ### Comandos Multi-Problema
 ```bash
-# Resolver múltiples problemas
-python -m src.cli.solve data/problem.txt --multi --solvers gurobi cbc --pdf
+# Resolver multiples problemas
+python -m src.cli problema.txt -m
 
-# Benchmark de múltiples problemas
-python -m src.cli.benchmark data/problem.txt data/milp_example.txt --pdf
+# Multi-problema con PDF
+python -m src.cli problema.txt -m -p
 ```
 
 ### Reporte Multi-Problema
 El reporte incluye:
-1. **Portada** con estadísticas generales
+1. **Portada** con estadisticas generales
 2. **Resumen ejecutivo** con tabla de resultados
-3. **Página individual** por problema (función objetivo, restricciones, solución, holguras, gráfico)
+3. **Pagina individual** por problema (funcion objetivo, restricciones, solucion, holguras, grafico)
 4. **Resumen de tiempos** por problema
 
-Referencia: `data/comandos_reportes.md` para más ejemplos.
-
-## MILP (Programación Lineal Entera)
+## MILP (Programacion Lineal Entera)
 
 El sistema soporta variables enteras (`int`, `integer`) y binarias (`bin`, `binary`).
 
@@ -245,16 +316,22 @@ y binary       # Variable binaria (0 o 1)
 x >= 0; y >= 0
 ```
 
-### Resolver con Gurobi (soporta MILP)
+### Solvers con soporte MILP
+Gurobi, CBC, SCIP, ECOS, CVXOPT
+
 ```bash
-python -m src.cli.solve data/milp_example.txt --pdf --solver gurobi
+# Resolver MILP con Gurobi
+python -m src.cli problema_milp.txt -s gurobi
+
+# Resolver MILP con CBC
+python -m src.cli problema_milp.txt -s cbc
 ```
 
 ---
 
 ## Entendiendo los Resultados
 
-### Solución Óptima
+### Solucion Optima
 
 ```
 Status: OPTIMAL
@@ -269,7 +346,7 @@ y = 20.00
 Status: INFEASIBLE
 ```
 
-Significa que las restricciones se contradicen entre sí.
+Significa que las restricciones se contradicen entre si.
 
 ### Problema No Acotado
 
@@ -283,19 +360,19 @@ El objetivo puede mejorar indefinidamente.
 
 El reporte incluye:
 
-1. **Portada**: Información del benchmark
+1. **Portada**: Informacion del benchmark
 2. **Resumen**: Tabla comparativa por solver
-3. **Gráficos**:
-   - Tiempo de ejecución
+3. **Graficos**:
+   - Tiempo de ejecucion
    - Uso de memoria
    - Iteraciones
 
-## Solución de Problemas
+## Solucion de Problemas
 
 ### "Solver no disponible"
 
-- Verificar instalación: `python main.py --list-solvers`
-- Instalar solver: `pip install highspy` o `pip install swiglpk`
+- Verificar instalacion: `python -m src.cli -l`
+- Instalar solver: `pip install ecos` o `pip install osqp`
 
 ### "Problema infactible"
 
@@ -304,9 +381,10 @@ El reporte incluye:
 
 ### Resultados incorrectos
 
-- Verificar coefficients
+- Verificar coeficientes
 - Verificar direcciones de restricciones
+- Comparar con otro solver usando `-b -S solver1 solver2`
 
 ---
 
-Para detalles técnicos, ver [README.md](../README.md).
+Para detalles tecnicos, ver [README.md](../README.md).
