@@ -5,7 +5,7 @@ Proporciona una interfaz comun para diferentes implementaciones de solvers.
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Optional, Any, List
+from typing import Optional, Any, List, Dict
 
 from ..core import Solution, LinearProblem
 from ..core.solution import ProgressPoint as PP
@@ -30,6 +30,16 @@ class SolverStats:
     max_constraint_viol: float = 0.0
     condition_number: Optional[float] = None
     progress_log: Optional[list[ProgressPoint]] = None
+
+@dataclass
+class SolverCapabilities:
+    """Capacidades explicitas de un solver."""
+    lp: bool = True
+    milp: bool = True
+    qp: bool = False
+    duals: bool = True
+    warm_start: bool = False
+    sensitivity: bool = False
 
 
 class BaseSolver(ABC):
@@ -62,6 +72,7 @@ class BaseSolver(ABC):
         self.config = config or self.Config()
         self.stats = SolverStats()
         self._solver_name = "BaseSolver"
+        self.capabilities = SolverCapabilities()
     
     @property
     def solver_name(self) -> str:

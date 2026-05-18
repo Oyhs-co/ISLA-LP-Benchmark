@@ -23,6 +23,15 @@ class GLPKSolver(BaseSolver):
         self._iterations = 0
         self._nodes = 0
         self._lp = None  # Lazy loading
+        
+        self.capabilities = SolverCapabilities(
+            lp=True,
+            milp=True,
+            qp=False,
+            duals=True,
+            warm_start=False,
+            sensitivity=True
+        )
     
     @property
     def solver_name(self) -> str:
@@ -190,8 +199,9 @@ class GLPKSolver(BaseSolver):
             try:
                 from ..analysis.sensitivity import extract_glpk_sensitivity
                 sensitivity = extract_glpk_sensitivity(prob, variables_list, problem.constraints)
-            except:
-                pass
+            except Exception as e:
+                if self.config.verbose:
+                    print(f"Advertencia: No se pudo extraer sensibilidad de GLPK: {e}")
             
             self._solution = Solution(
                 status=status_str,

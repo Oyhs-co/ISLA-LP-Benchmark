@@ -231,7 +231,7 @@ class BenchmarkPlotter:
         ]
         colors = [self.style.secondary_color, self.style.success_color, self.style.error_color]
         wedges, texts, autotexts = ax4.pie(values, labels=categories, colors=colors, 
-                                          autopct='%1.1f%%', startangle=90)
+                                           autopct='%1.1f%%', startangle=90)
         ax4.set_title('Resumen General')
         
         plt.tight_layout()
@@ -241,3 +241,12 @@ class BenchmarkPlotter:
             plt.close()
         else:
             plt.show()
+
+    def generate_all_plots(self, output_dir: Path) -> None:
+        """Genera todos los gráficos de benchmarking en el directorio especificado."""
+        output_dir.mkdir(parents=True, exist_ok=True)
+        self.plot_times_comparison(output_dir / "benchmark_times.png")
+        self.plot_success_rate(output_dir / "benchmark_success.png")
+        self.plot_performance_profile(output_dir / "benchmark_profile.png")
+        self.plot_summary_dashboard(output_dir / "benchmark_dashboard.png")
+

@@ -8,8 +8,34 @@ from .gurobi import GurobiSolver
 from .multi_solver import MultiSolver, MultiSolverResult, ProblemResult
 from .benchmark import BenchmarkRunner, BenchmarkResult, BenchmarkConfig, run_quick_benchmark
 
-SolverLP = GurobiSolver
+SolverLP = None
+try:
+    from .gurobi import GurobiSolver
+    # Instanciar con problema=None solo para validacion de disponibilidad
+    # Nota: GurobiSolver(None) funciona porque BaseSolver acepta None en el constructor si se maneja
+    if GurobiSolver(None).is_available:
+        SolverLP = GurobiSolver
+    else:
+        # buscar primer solver disponible en el registro
+        available_solvers = SolverRegistry.list_solvers(available_only=True)
+        if available_solvers:
+            # Priorizar solvers robustos (HiGHS, CBC, GLPK)
+            priority = ["highs", "cbc", "glpk", "scip"]
+            for p in priority:
+                if p in available_solvers:
+                    SolverLP = SolverRegistry.get(p)
+                    break
+            # Si ninguno de los prioritarios está, usar el primero disponible
+            if SolverLP is None:
+                SolverLP = SolverRegistry.get(available_solvers[0])
+        else:
+            # Fallback final
+            SolverLP = GurobiSolver
+except ImportError:
+    SolverLP = GurobiSolver
+
 SolverConfig = BaseSolver.Config
+
 
 SolverRegistry.register("gurobi", GurobiSolver, available=True)
 

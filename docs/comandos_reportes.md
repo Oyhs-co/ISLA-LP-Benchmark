@@ -4,9 +4,96 @@
 
 ### Con Gurobi
 ```bash
-cd "C:\Users\ACER\Documents\Proyectos - Software\ArcSoft\Gurobipy-simplex-general-solver"
 python -m src.cli.solve data/problem.txt --pdf --solver gurobi
 ```
+**Salida:** `data/problem.pdf`
+
+### Con CBC
+```bash
+python -m src.cli.solve data/problem.txt --pdf --solver cbc
+```
+**Salida:** `data/problem.pdf`
+
+### Con SCIP
+```bash
+python -m src.cli.solve data/problem.txt --pdf --solver scip
+```
+**Salida:** `data/problem.pdf`
+
+### Con HiGHS
+```bash
+python -m src.cli.solve data/problem.txt --pdf --solver highs
+```
+**Salida:** `data/problem.pdf`
+
+### Automático (detecta solver disponible)
+```bash
+python -m src.cli.solve data/problem.txt --pdf
+```
+**Salida:** `data/problem.pdf`
+
+---
+
+## 2. Reporte Multi-Problema (Multi-Problem Report)
+
+### Con múltiples solvers
+```bash
+python -m src.cli.solve data/problem.txt --multi --solvers gurobi cbc --pdf
+```
+**Salida:** `data/problem_multi.pdf`
+
+### Con todos los solvers disponibles
+```bash
+python -m src.cli.solve data/problem.txt --multi --solvers gurobi cbc scip highs --pdf
+```
+**Salida:** `data/problem_multi.pdf`
+
+---
+
+## 3. Reporte de Benchmark (Comparativo)
+
+### Benchmark básico con PDF
+```bash
+python -m src.cli.benchmark data/problem.txt --pdf --output data/benchmark_output
+```
+**Salida:** `data/benchmark_output/benchmark_report.pdf`
+
+### Benchmark con múltiples problemas
+```bash
+python -m src.cli.benchmark data/problem.txt data/milp_example.txt --pdf
+```
+**Salida:** `data/benchmark_output/benchmark_report.pdf`
+
+### Benchmark con solvers específicos
+```bash
+python -m src.cli.benchmark data/problem.txt --solvers gurobi cbc scip --pdf --output data/benchmark_output
+```
+**Salida:** `data/benchmark_output/benchmark_report.pdf`
+
+### Benchmark con exportación HTML (con gráficos)
+```bash
+python -m src.cli.benchmark data/problem.txt --solvers gurobi highs --pdf --output data/benchmark_output
+# El HTML se genera automáticamente con las gráficas
+```
+**Salidas:** 
+- `data/benchmark_output/benchmark_report.pdf`
+- `data/benchmark_output/benchmark_report.html`
+- `data/benchmark_output/plots/` (gráficas)
+
+---
+
+## 4. Ejemplos de Uso con Diferentes Problemas
+
+### Problema MILP (Programación Lineal Entera)
+```bash
+python -m src.cli.solve data/milp_example.txt --pdf --solver gurobi
+```
+
+### Benchmark de múltiples problemas
+```bash
+python -m src.cli.benchmark data/problem.txt data/milp_example.txt --pdf
+```
+
 **Salida:** `data/problem.pdf`
 
 ### Con CBC

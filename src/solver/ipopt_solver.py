@@ -11,12 +11,25 @@ try:
 except ImportError:
     _is_solver_available = False
 
+from typing import Optional
+
 from ..core import LinearProblem, Solution
-from .base import BaseSolver, SolverStats
+from .base import BaseSolver, SolverStats, SolverCapabilities
 
 
 class IpoptSolver(BaseSolver):
     """Solver Ipopt para problemas de programacion lineal usando CasADi."""
+
+    def __init__(self, problem: LinearProblem, config: Optional[BaseSolver.Config] = None):
+        super().__init__(problem, config)
+        self.capabilities = SolverCapabilities(
+            lp=True,
+            milp=False,
+            qp=True,
+            duals=True,
+            warm_start=False,
+            sensitivity=False
+        )
 
     @property
     def solver_name(self) -> str:

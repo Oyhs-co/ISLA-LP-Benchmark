@@ -48,6 +48,15 @@ class GurobiSolver(BaseSolver):
         self.iis_constraints: list[str] = []
         self.iis_variables: list[str] = []
         self._lp = None  # Lazy loading of PolarsLP if needed
+        
+        self.capabilities = SolverCapabilities(
+            lp=True,
+            milp=True,
+            qp=False,
+            duals=True,
+            warm_start=True,
+            sensitivity=True
+        )
     
     @property
     def lp(self):
@@ -67,11 +76,14 @@ class GurobiSolver(BaseSolver):
     
     @property
     def is_available(self) -> bool:
-        """Verifica si Gurobi esta disponible."""
+        """Verifica si Gurobi esta disponible y tiene licencia valida."""
         try:
-            import gurobipy
+            import gurobipy as gp
+            # intentamos crear un modelo minimo para validar la licencia
+            with gp.Env() as env:
+                model = gp.Model("check", env=env)
             return True
-        except ImportError:
+        except Exception:
             return False
     
     def _apply_config(self) -> None:
@@ -283,8 +295,9 @@ class GurobiSolver(BaseSolver):
             try:
                 from src.analysis.sensitivity import extract_gurobi_sensitivity
                 sensitivity = extract_gurobi_sensitivity(self.model)
-            except Exception:
-                pass  # Sensibilidad no disponible
+            except Exception as e:
+                if self.config.verbose:
+                    print(f"Advertencia: No se pudo extraer sensibilidad de Gurobi: {e}")
         
         # F3-4: Métricas de calidad numérica
         numerical_quality = None

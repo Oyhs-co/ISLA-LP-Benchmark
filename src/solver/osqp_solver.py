@@ -11,13 +11,26 @@ try:
 except ImportError:
     _is_solver_available = False
 
+from typing import Optional
+
 from ..core import LinearProblem, Solution
-from .base import BaseSolver, SolverStats
+from .base import BaseSolver, SolverStats, SolverCapabilities
 
 
 class OSQPSolver(BaseSolver):
     """Solver OSQP para problemas de programacion lineal.
     """
+
+    def __init__(self, problem: LinearProblem, config: Optional[BaseSolver.Config] = None):
+        super().__init__(problem, config)
+        self.capabilities = SolverCapabilities(
+            lp=True,
+            milp=False,
+            qp=True,
+            duals=True,
+            warm_start=True,
+            sensitivity=False
+        )
 
     @property
     def solver_name(self) -> str:

@@ -309,7 +309,7 @@ class LinearVisualization:
                 elif abs(a) > 1e-10:
                     x_const = opt_value / a
                     ax.axvline(x_const, color='b', linestyle='--', alpha=0.7,
-                              linewidth=2, label=f'Funcion objetivo (Z={opt_value:.2f})')
+                               linewidth=2, label=f'Funcion objetivo (Z={opt_value:.2f})')
         
         padding_x = (x_max - x_min) * 0.05
         padding_y = (y_max - y_min) * 0.05
@@ -340,6 +340,14 @@ class LinearVisualization:
             plt.show()
         
         plt.close()
+
+    def plot_to_tempfile(self) -> str:
+        """Genera la visualización y la guarda en un archivo temporal. Retorna la ruta."""
+        import tempfile
+        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
+            self.plot(save_path=tmp.name, show=False)
+            return tmp.name
+
     
     def _format_objective(self) -> str:
         """Formatea la funcion objetivo."""
