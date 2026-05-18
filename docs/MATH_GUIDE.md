@@ -1,4 +1,4 @@
-# Guia Matematica - ISLA LP Benchmark v1.2.0
+# Guia Matematica - ISLA LP Benchmark v1.2.1
 
 Esta guia es para **matematicos e investigadores** que quieren entender la teoria detras del sistema.
 

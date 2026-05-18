@@ -25,7 +25,7 @@ def _version() -> str:
         from importlib.metadata import version
         return version("isla-lp-benchmark")
     except Exception:
-        return "1.2.0"
+        return "1.2.1"
 
 
 def create_parser() -> argparse.ArgumentParser:

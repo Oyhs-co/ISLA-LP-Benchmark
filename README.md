@@ -1,4 +1,4 @@
-# ISLA LP Benchmark v1.2.0
+# ISLA LP Benchmark v1.2.1
 
 ## Resumen del Proyecto
 
@@ -416,7 +416,6 @@ Salida (ejemplo en entorno con modulos instalados):
 | matplotlib | >=3.9.0 | Generacion de graficos 2D |
 | numpy | >=2.4.3 | Computacion numerica |
 | fpdf2 | >=2.7.0 | Generacion de documentos PDF |
-| reportlab | >=4.4.10 | Generacion avanzada de PDFs |
 | psutil | >=7.2.2 | Metricas de memoria |
 | highspy | >=1.14.0 | Solver HiGHS |
 | swiglpk | >=5.0.13 | Solver GLPK |
@@ -426,7 +425,6 @@ Salida (ejemplo en entorno con modulos instalados):
 | cvxopt | >=1.3.0 | Solver de programacion convexa CVXOPT |
 | scs | >=3.0.0 | Solver conico de punto fijo SCS |
 | casadi | >=3.7.0 | Interfaz Python para Ipopt NLP |
-| pyoptinterface | >=0.6.0 | Interfaz moderna de optimizacion |
 
 
 ---

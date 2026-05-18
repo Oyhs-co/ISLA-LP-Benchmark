@@ -22,6 +22,15 @@ class HiGHSSolver(BaseSolver):
         self._iterations = 0
         self._nodes = 0
         self._lp = None  # Lazy loading
+        
+        self.capabilities = SolverCapabilities(
+            lp=True,
+            milp=True,
+            qp=False,
+            duals=True,
+            warm_start=False,
+            sensitivity=True
+        )
     
     @property
     def solver_name(self) -> str:
@@ -126,11 +135,11 @@ class HiGHSSolver(BaseSolver):
                 
                 # F3-7: Try to get dual values and reduced costs
                 try:
-                    dual_solution = hp.getDualSolution()
+                    sol = hp.getSolution()
                     # For constraints - needs mapping
                     for i, constr in enumerate(problem.constraints):
-                        if i < len(dual_solution):
-                            dual_values[constr.name or f"R{i}"] = dual_solution[i]
+                        if i < len(sol.row_dual):
+                            dual_values[constr.name or f"R{i}"] = sol.row_dual[i]
                 except:
                     pass
                 
@@ -146,8 +155,9 @@ class HiGHSSolver(BaseSolver):
             try:
                 from ..analysis.sensitivity import extract_highs_sensitivity
                 sensitivity = extract_highs_sensitivity(hp)
-            except:
-                pass
+            except Exception as e:
+                if self.config.verbose:
+                    print(f"Advertencia: No se pudo extraer sensibilidad de HiGHS: {e}")
             
             # F3-8: Use proper infinity
             from ..core.constants import DEFAULT_INFINITY

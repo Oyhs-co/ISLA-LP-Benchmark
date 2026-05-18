@@ -7,11 +7,10 @@ import time
 from typing import Optional
 
 import pulp
-from pulp import LpProblem, LpVariable, LpMinimize, LpMaximize, LpBinary, LpContinuous, LpStatus
-
+from pulp import LpProblem, LpVariable, LpMinimize, LpMaximize, LpBinary, LpContinuous, LpInteger, LpStatus
 from ..core import LinearProblem, Solution, VariableBound
 from ..matrix import LPBuilder
-from .base import BaseSolver, SolverStats
+from .base import BaseSolver, SolverStats, SolverCapabilities
 
 
 class CBCSolver(BaseSolver):
@@ -23,6 +22,15 @@ class CBCSolver(BaseSolver):
         self._iterations = 0
         self._nodes = 0
         self._lp = None  # Lazy loading
+        
+        self.capabilities = SolverCapabilities(
+            lp=True,
+            milp=True,
+            qp=False,
+            duals=True,
+            warm_start=False,
+            sensitivity=False
+        )
     
     @property
     def solver_name(self) -> str:

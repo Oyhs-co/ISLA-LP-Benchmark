@@ -13,11 +13,12 @@ from src.solver import (
 )
 from src.analysis import export_benchmark_results, ResultsExporter
 from src.cli import get_system_info
+from src.visualization.benchmark_plots import BenchmarkPlotter as BenchmarkVisualizer
 
 
 def run_benchmark(
     input_path: Optional[Path] = None,
-    solvers: list[str] = None,
+    solvers: Optional[list[str]] = None,
     repetitions: int = 1,
     visualize: bool = False,
     output_csv: Optional[str] = None,
@@ -30,7 +31,7 @@ def run_benchmark(
 ) -> int:
     """Ejecuta el modo benchmark."""
     solvers = solvers or ['gurobi']
-    output_dir = Path(output_dir) if output_dir else Path('data/benchmark_output')
+    output_dir_val = Path(output_dir) if output_dir else Path('data/benchmark_output')
     
     problems = []
     
@@ -84,8 +85,8 @@ def run_benchmark(
     if plot_comparison or visualize:
         print("\nGenerating plots...")
         viz = BenchmarkVisualizer(runner)
-        viz.generate_all_plots(output_dir)
-        print(f"Plots saved to: {output_dir}")
+        viz.generate_all_plots(output_dir_val)
+        print(f"Plots saved to: {output_dir_val}")
     
     if pdf:
         print("\nGenerating PDF report...")
@@ -100,7 +101,7 @@ def run_benchmark(
         benchmark_report.generate(str(pdf_path))
         print(f"PDF saved to: {pdf_path}")
     
-    export_benchmark_results(runner, output_dir, formats=['json', 'csv', 'md'])
+    export_benchmark_results(runner, output_dir_val, formats=['json', 'csv', 'md'])
     print(f"\nFull results saved to: {output_dir}")
     
     return 0
