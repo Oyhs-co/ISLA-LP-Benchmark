@@ -1,0 +1,39 @@
+{# templates/solution.html #}
+<div class="card mt-3">
+    <div class="card-header">
+        <h3>Resultado ({{ solver }})</h3>
+    </div>
+    <div class="card-body">
+        <p><strong>Estado:</strong> {{ solution.status }}</p>
+        <p><strong>Valor óptimo:</strong> {{ solution.objective_value }}</p>
+        <p><strong>Tiempo:</strong> {{ elapsed_ms }} ms</p>
+
+        <h4>Variables</h4>
+        <table class="table">
+            <thead><tr><th>Variable</th><th>Valor</th></tr></thead>
+            <tbody>
+                {% for var, val in solution.variables.items() %}
+                <tr>
+                    <td>{{ var }}</td>
+                    <td>{{ "%.6f" | format(val) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if solution.numerical_quality %}
+        {% set nq = solution.numerical_quality %}
+        <div class="card mt-3">
+            <div class="card-header"><h4>Calidad Numérica</h4></div>
+            <div class="card-body">
+                <table class="table">
+                    <tr><td>Max bound viol</td><td>{{ nq.max_bound_viol or 'N/A' }}</td></tr>
+                    <tr><td>Max dual viol</td><td>{{ nq.max_dual_viol  or 'N/A' }}</td></tr>
+                    <tr><td>Max slack viol</td><td>{{ nq.max_slack_viol or 'N/A' }}</td></tr>
+                    <tr><td>MIP Gap</td>        <td>{{ nq.mip_gap      or 'N/A' }}</td></tr>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>

@@ -1,0 +1,77 @@
+{# templates/problem_detail.html #}
+<div class="card">
+    <div class="card-header">
+        <h3>Problema: {{ problem.name or 'Sin nombre' }}</h3>
+    </div>
+    <div class="card-body">
+        <p><strong>Sentido:</strong> {{ problem.sense }}</p>
+        <p><strong>Objetivo:</strong>
+            {% for var, coeff in problem.objective.items() %}
+                {{ coeff }} {{ var }}{% if not loop.last %} + {% endif %}
+            {% endfor %}
+        </p>
+        <p>
+            <strong>Variables:</strong> {{ problem.variables | length }} |
+            <strong>Restricciones:</strong> {{ problem.constraints | length }}
+        </p>
+
+        <h4>Restricciones</h4>
+        <table class="table">
+            <thead>
+                <tr><th>Nombre</th><th>Expresión</th><th>Sentido</th><th>RHS</th></tr>
+            </thead>
+            <tbody>
+                {% for i, c in problem.constraints | enumerate %}
+                <tr>
+                    <td>{{ c.name or 'C' ~ i }}</td>
+                    <td>
+                        {% for var, coeff in c.coefficients.items() %}
+                            {{ coeff }} {{ var }}{% if not loop.last %} + {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td>{{ c.sense }}</td>
+                    <td>{{ c.rhs }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h4>Variables</h4>
+        <table class="table">
+            <thead>
+                <tr><th>Variable</th><th>Tipo</th><th>Inferior</th><th>Superior</th></tr>
+            </thead>
+            <tbody>
+                {% for var in problem.variables %}
+                {% set bound = problem.bounds.get(var) %}
+                <tr>
+                    <td>{{ var }}</td>
+                    <td>{{ problem.variable_types.get(var, 'continuous') }}</td>
+                    <td>{{ bound.lower if bound and bound.lower is not none else '-inf' }}</td>
+                    <td>{{ bound.upper if bound and bound.upper is not none else '+inf' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {# Formulario de resolución — usa HTMX para no recargar la página #}
+        <form hx-post="/solve/{{ pid }}" hx-target="#solution" hx-swap="innerHTML">
+            <div class="mb-3">
+                <label class="form-label">Seleccionar solver:</label>
+                <select name="solver" class="form-select">
+                    {% for s in solvers %}
+                        <option value="{{ s }}">{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Time limit (s):</label>
+                <input type="number" name="time_limit" value="300"
+                       class="form-control" style="width:100px">
+            </div>
+            <button type="submit" class="btn btn-primary">Resolver</button>
+        </form>
+    </div>
+</div>
+
+<div id="solution"></div>

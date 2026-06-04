@@ -137,13 +137,11 @@ class GurobiSolver(BaseSolver):
     def diagnose_infeasibility(self) -> dict:
         """
         Diagnostica la causa de infactibilidad usando IIS.
+        Asume que el modelo ya fue construido y optimizado (status == INFEASIBLE).
         
         Returns:
             dict: Diccionario con informacion del IIS.
         """
-        self._build_model()
-        self.model.optimize()
-        
         if self.model.status != GRB.INFEASIBLE:
             return {
                 "is_infeasible": False,
@@ -154,12 +152,12 @@ class GurobiSolver(BaseSolver):
         
         iis_constraints = []
         for constr in self.model.getConstrs():
-            if constr.iisconstr:
+            if constr.IISConstr:
                 iis_constraints.append(constr.constrName)
         
         iis_variables = []
         for var in self.model.getVars():
-            if var.iisvar:
+            if var.IISLB or var.IISUB:
                 iis_variables.append(var.varName)
         
         self.iis_constraints = iis_constraints

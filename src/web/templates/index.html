@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><h3>Cargar Problema</h3></div>
+            <div class="card-body">
+                <form hx-encoding="multipart/form-data"
+                      hx-post="/upload"
+                      hx-target="#result"
+                      hx-swap="innerHTML">
+                    <div class="mb-3">
+                        <label class="form-label">Archivo LP o MPS:</label>
+                        <input type="file" name="file" class="form-control" accept=".lp,.mps,.txt">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">O pega el texto del problema:</label>
+                        <textarea name="text" class="form-control" rows="5"
+                                  placeholder="max: x + y; x + y <= 10; x >= 0; y >= 0"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Parsear</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><h3>Problemas de Ejemplo</h3></div>
+            <div class="card-body">
+                <button class="btn btn-outline-secondary mb-2"
+                        hx-post="/load-example"
+                        hx-vals='{"example": "simple"}'
+                        hx-target="#result"
+                        hx-swap="innerHTML">Simple (max)</button>
+
+                <button class="btn btn-outline-secondary mb-2"
+                        hx-post="/load-example"
+                        hx-vals='{"example": "mip"}'
+                        hx-target="#result"
+                        hx-swap="innerHTML">MILP</button>
+
+                <button class="btn btn-outline-secondary mb-2"
+                        hx-post="/load-example"
+                        hx-vals='{"example": "netlib"}'
+                        hx-target="#result"
+                        hx-swap="innerHTML">Netlib-like</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="result"></div>
+<div id="solution"></div>
+{% endblock %}
