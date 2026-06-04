@@ -114,14 +114,14 @@ class CBCSolver(BaseSolver):
         try:
             prob = self._build_problem(self.problem)
             
-            # F3-12, F3-16: CBC solver options
+            # F3-12, F3-16: CBC solver options (PuLP espera lista de strings)
             solver_options = []
             if self.config.mip_gap is not None:
-                solver_options.append(("ratioGap", self.config.mip_gap))
+                solver_options.append(f"ratioGap {self.config.mip_gap}")
             if self.config.time_limit is not None:
-                solver_options.append(("sec", self.config.time_limit))
+                solver_options.append(f"sec {self.config.time_limit}")
             if self.config.threads is not None:
-                solver_options.append(("threads", self.config.threads))
+                solver_options.append(f"threads {self.config.threads}")
             
             solver = pulp.PULP_CBC_CMD(msg=self.config.verbose, options=solver_options)
             
