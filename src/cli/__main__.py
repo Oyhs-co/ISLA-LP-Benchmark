@@ -6,11 +6,11 @@ Maneja la interfaz de linea de comandos.
 import argparse
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import TextIO
 
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
+from rich.table import Table
 
 _console = Console()
 
@@ -19,7 +19,8 @@ class CustomHelpFormatter(
     argparse.RawDescriptionHelpFormatter,
     argparse.ArgumentDefaultsHelpFormatter,
 ):
-    """Formateador combinado: preserva saltos de linea + muestra valores por defecto."""
+    """Personaliza la salida de ayuda de argparse combinando la preservación de saltos de línea
+    con la muestra de valores por defecto."""
 
 
 def _version() -> str:
@@ -54,7 +55,8 @@ complete -F _Path(sys.argv[0])name {Path(sys.argv[0]).name}"""
 class _RichArgumentParser(argparse.ArgumentParser):
     """Parser que muestra la ayuda con secciones en paneles Rich."""
 
-    def print_help(self, file=None):
+    def print_help(self, file: TextIO | None = None) -> None:
+        """Imprime la ayuda formateada con paneles de Rich."""
         text = argparse.ArgumentParser.format_help(self)
         lines = text.split('\n')
         sections = []
@@ -116,7 +118,8 @@ class _RichArgumentParser(argparse.ArgumentParser):
             border_style="bright_blue",
         ))
 
-    def format_help(self):
+    def format_help(self) -> str:
+        """Retorna el texto de ayuda estándar de argparse."""
         return argparse.ArgumentParser.format_help(self)
 
 
@@ -316,6 +319,14 @@ Para mas ayuda sobre un modo concreto, combine las opciones:
     # --- Salida ---
     output_group = parser.add_argument_group('Opciones de salida')
     output_group.add_argument(
+        '--format',
+        type=str,
+        choices=['pdf', 'html', 'md'],
+        default=None,
+        metavar='FORMATO',
+        help='Formato del reporte (pdf, html, md). Por defecto no se genera reporte, usar --pdf o --format'
+    )
+    output_group.add_argument(
         '--output', '-o',
         type=str,
         metavar='RUTA',
@@ -357,7 +368,7 @@ def _print_banner() -> None:
     ))
 
 
-def main(argv: Optional[list[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     """Punto de entrada principal."""
     parser = create_parser()
     args = parser.parse_args(argv)
@@ -399,6 +410,11 @@ def main(argv: Optional[list[str]] = None) -> int:
 
     solver_name = args.solver
 
+    # Compute effective format: --format overrides --pdf, --pdf sets pdf
+    report_format = args.format
+    if args.pdf and report_format is None:
+        report_format = "pdf"
+
     if args.benchmark:
         from src.cli.benchmark import run_benchmark
         from src.solver import SolverRegistry
@@ -415,7 +431,7 @@ def main(argv: Optional[list[str]] = None) -> int:
             plot_comparison=args.plot_comparison,
             output_dir=args.output_dir if args.output_dir else None,
             verbose=args.verbose,
-            pdf=args.pdf,
+            report_format=report_format,
             quiet=args.quiet,
             time_limit=args.timeout,
             parser_name=args.parser,
@@ -429,7 +445,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         kwargs = dict(
             solver_name=solver_name,
             visualize=args.visualize,
-            pdf=args.pdf,
+            report_format=report_format,
             times=args.times,
             verbose=args.verbose,
             output=args.output,
@@ -458,11 +474,11 @@ def _parse_only(path: Path, verbose: bool = False, parser_name: str = "auto") ->
         return 1
 
     try:
-        with open(path, 'r') as f:
+        with open(path) as f:
             content = f.read()
 
-        from src.parser import get_parser_class
         from src.matrix import LPBuilder
+        from src.parser import get_parser_class
 
         parser_cls = get_parser_class(parser_name, content, path.suffix)
 

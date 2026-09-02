@@ -1,12 +1,13 @@
 """
 Tests para el modulo solve (CLI resolver).
 """
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from pathlib import Path  # noqa: E402
-from unittest.mock import patch, MagicMock  # noqa: E402
+from unittest.mock import MagicMock, patch  # noqa: E402
 
 
 class TestSolveSingle:
@@ -18,8 +19,9 @@ class TestSolveSingle:
         assert rc == 1
 
     def test_solver_not_found(self):
-        from src.cli.solve import solve_single
         import tempfile
+
+        from src.cli.solve import solve_single
         content = "max: x + y;\n x + y <= 10;\n x >= 0;\n y >= 0;"
         with tempfile.NamedTemporaryFile(mode="w", suffix=".lp", delete=False, encoding="utf-8") as f:
             f.write(content)
@@ -33,8 +35,9 @@ class TestSolveSingle:
             os.unlink(tmp)
 
     def test_successful_solve(self):
-        from src.cli.solve import solve_single
         import tempfile
+
+        from src.cli.solve import solve_single
         content = "max: x + y;\n x + y <= 10;\n x >= 0;\n y >= 0;"
         with tempfile.NamedTemporaryFile(mode="w", suffix=".lp", delete=False, encoding="utf-8") as f:
             f.write(content)
@@ -54,8 +57,9 @@ class TestSolveSingle:
             os.unlink(tmp)
 
     def test_json_output(self):
-        from src.cli.solve import solve_single
         import tempfile
+
+        from src.cli.solve import solve_single
         content = "max: x + y;\n x + y <= 10;\n x >= 0;\n y >= 0;"
         with tempfile.NamedTemporaryFile(mode="w", suffix=".lp", delete=False, encoding="utf-8") as f:
             f.write(content)
@@ -75,8 +79,9 @@ class TestSolveSingle:
             os.unlink(tmp)
 
     def test_json_output_to_file(self):
-        from src.cli.solve import solve_single
         import tempfile
+
+        from src.cli.solve import solve_single
         content = "max: x + y;\n x + y <= 10;\n x >= 0;\n y >= 0;"
         with tempfile.NamedTemporaryFile(mode="w", suffix=".lp", delete=False, encoding="utf-8") as f:
             f.write(content)
@@ -99,8 +104,9 @@ class TestSolveSingle:
             os.unlink(tmp)
 
     def test_solver_raises_typeerror(self):
-        from src.cli.solve import solve_single
         import tempfile
+
+        from src.cli.solve import solve_single
         content = "max: x + y;\n x + y <= 10;\n x >= 0;\n y >= 0;"
         with tempfile.NamedTemporaryFile(mode="w", suffix=".lp", delete=False, encoding="utf-8") as f:
             f.write(content)
@@ -128,8 +134,9 @@ class TestSolveSingle:
             os.unlink(tmp)
 
     def test_non_optimal_status(self):
-        from src.cli.solve import solve_single
         import tempfile
+
+        from src.cli.solve import solve_single
         content = "max: x + y;\n x + y <= 10;\n x >= 0;\n y >= 0;"
         with tempfile.NamedTemporaryFile(mode="w", suffix=".lp", delete=False, encoding="utf-8") as f:
             f.write(content)
@@ -150,8 +157,9 @@ class TestSolveSingle:
             os.unlink(tmp)
 
     def test_visualize_2d(self):
-        from src.cli.solve import solve_single
         import tempfile
+
+        from src.cli.solve import solve_single
         content = "max: x + y;\n x + y <= 10;\n x >= 0;\n y >= 0;"
         with tempfile.NamedTemporaryFile(mode="w", suffix=".lp", delete=False, encoding="utf-8") as f:
             f.write(content)
@@ -175,8 +183,9 @@ class TestSolveSingle:
             os.unlink(tmp)
 
     def test_times_flag(self):
-        from src.cli.solve import solve_single
         import tempfile
+
+        from src.cli.solve import solve_single
         content = "max: x + y;\n x + y <= 10;\n x >= 0;\n y >= 0;"
         with tempfile.NamedTemporaryFile(mode="w", suffix=".lp", delete=False, encoding="utf-8") as f:
             f.write(content)
@@ -198,8 +207,9 @@ class TestSolveSingle:
             os.unlink(tmp)
 
     def test_pdf_flag(self):
-        from src.cli.solve import solve_single
         import tempfile
+
+        from src.cli.solve import solve_single
         content = "max: x + y;\n x + y <= 10;\n x >= 0;\n y >= 0;"
         with tempfile.NamedTemporaryFile(mode="w", suffix=".lp", delete=False, encoding="utf-8") as f:
             f.write(content)
@@ -213,20 +223,20 @@ class TestSolveSingle:
 
             with patch("src.cli.solve.SolverRegistry") as mock_reg:
                 mock_reg.get.return_value = lambda p, c: mock_solver
-                with patch("src.analysis.LPAnalysis") as mock_analysis:
-                    with patch("src.analysis.ExecutionTimes"):
+                with patch("src.cli.solve._render_report") as mock_render:
+                    with patch("src.report.adapters.adapt_single_solution") as mock_adapt:
+                        mock_adapt.return_value = MagicMock(variables={}, tables={})
                         with patch("src.cli.get_system_info"):
-                            mock_analysis_instance = MagicMock()
-                            mock_analysis.return_value = mock_analysis_instance
-                            rc = solve_single(Path(tmp), pdf=True)
+                            rc = solve_single(Path(tmp), report_format="pdf")
                             assert rc == 0
-                            mock_analysis_instance.generate_pdf.assert_called_once()
+                            mock_render.assert_called_once()
         finally:
             os.unlink(tmp)
 
     def test_error_handler_verbose(self):
-        from src.cli.solve import solve_single
         import tempfile
+
+        from src.cli.solve import solve_single
         content = "max: x + y;\n x + y <= 10;\n x >= 0;\n y >= 0;"
         with tempfile.NamedTemporaryFile(mode="w", suffix=".lp", delete=False, encoding="utf-8") as f:
             f.write(content)
@@ -243,8 +253,9 @@ class TestSolveSingle:
             os.unlink(tmp)
 
     def test_quiet_json_output_to_stdout(self):
-        from src.cli.solve import solve_single
         import tempfile
+
+        from src.cli.solve import solve_single
         content = "max: x + y;\n x + y <= 10;\n x >= 0;\n y >= 0;"
         with tempfile.NamedTemporaryFile(mode="w", suffix=".lp", delete=False, encoding="utf-8") as f:
             f.write(content)
@@ -276,8 +287,9 @@ class TestSolveMulti:
         assert rc == 1
 
     def test_solver_not_found(self):
-        from src.cli.solve import solve_multi
         import tempfile
+
+        from src.cli.solve import solve_multi
         content = "max: x;\nx >= 0;"
         with tempfile.NamedTemporaryFile(mode="w", suffix=".lp", delete=False, encoding="utf-8") as f:
             f.write(content)
@@ -291,8 +303,9 @@ class TestSolveMulti:
             os.unlink(tmp)
 
     def test_solve_multi_basic_success(self):
-        from src.cli.solve import solve_multi
         import tempfile
+
+        from src.cli.solve import solve_multi
         with tempfile.NamedTemporaryFile(mode="w", suffix=".lp", delete=False, encoding="utf-8") as f:
             f.write("placeholder")
             tmp = f.name
@@ -316,8 +329,9 @@ class TestSolveMulti:
             os.unlink(tmp)
 
     def test_solve_multi_json_output(self):
-        from src.cli.solve import solve_multi
         import tempfile
+
+        from src.cli.solve import solve_multi
         with tempfile.NamedTemporaryFile(mode="w", suffix=".lp", delete=False, encoding="utf-8") as f:
             f.write("placeholder")
             tmp = f.name
@@ -343,8 +357,9 @@ class TestSolveMulti:
             os.unlink(tmp)
 
     def test_solve_multi_visualize(self):
-        from src.cli.solve import solve_multi
         import tempfile
+
+        from src.cli.solve import solve_multi
         with tempfile.NamedTemporaryFile(mode="w", suffix=".lp", delete=False, encoding="utf-8") as f:
             f.write("placeholder")
             tmp = f.name
@@ -371,8 +386,9 @@ class TestSolveMulti:
             os.unlink(tmp)
 
     def test_solve_multi_pdf(self):
-        from src.cli.solve import solve_multi
         import tempfile
+
+        from src.cli.solve import solve_multi
         with tempfile.NamedTemporaryFile(mode="w", suffix=".lp", delete=False, encoding="utf-8") as f:
             f.write("placeholder")
             tmp = f.name
@@ -390,18 +406,18 @@ class TestSolveMulti:
                 mock_lp.return_value.parse.return_value = mock_problem
                 with patch("src.cli.solve.SolverRegistry") as mock_reg:
                     mock_reg.get.return_value = lambda p, c: mock_solver
-                    with patch("src.analysis.multi_analysis.MultiLPAnalysis") as mock_analysis:
-                        mock_analysis_instance = MagicMock()
-                        mock_analysis.return_value = mock_analysis_instance
-                        rc = solve_multi(Path(tmp), pdf=True)
-                        assert rc == 0
-                        mock_analysis_instance.generate_pdf.assert_called_once()
+                    with patch("src.cli.solve._render_report") as mock_render:
+                        with patch("src.cli.get_system_info"):
+                            rc = solve_multi(Path(tmp), report_format="pdf")
+                            assert rc == 0
+                            mock_render.assert_called_once()
         finally:
             os.unlink(tmp)
 
     def test_solve_multi_problem_solve_error(self):
-        from src.cli.solve import solve_multi
         import tempfile
+
+        from src.cli.solve import solve_multi
         with tempfile.NamedTemporaryFile(mode="w", suffix=".lp", delete=False, encoding="utf-8") as f:
             f.write("placeholder")
             tmp = f.name
@@ -422,8 +438,9 @@ class TestSolveMulti:
             os.unlink(tmp)
 
     def test_solve_multi_top_level_error(self):
-        from src.cli.solve import solve_multi
         import tempfile
+
+        from src.cli.solve import solve_multi
         with tempfile.NamedTemporaryFile(mode="w", suffix=".lp", delete=False, encoding="utf-8") as f:
             f.write("placeholder")
             tmp = f.name
@@ -437,8 +454,9 @@ class TestSolveMulti:
             os.unlink(tmp)
 
     def test_solve_multi_non_optimal(self):
-        from src.cli.solve import solve_multi
         import tempfile
+
+        from src.cli.solve import solve_multi
         with tempfile.NamedTemporaryFile(mode="w", suffix=".lp", delete=False, encoding="utf-8") as f:
             f.write("placeholder")
             tmp = f.name
@@ -463,8 +481,9 @@ class TestSolveMulti:
             os.unlink(tmp)
 
     def test_solve_multi_pdf_error(self):
-        from src.cli.solve import solve_multi
         import tempfile
+
+        from src.cli.solve import solve_multi
         with tempfile.NamedTemporaryFile(mode="w", suffix=".lp", delete=False, encoding="utf-8") as f:
             f.write("placeholder")
             tmp = f.name
@@ -482,17 +501,18 @@ class TestSolveMulti:
                 mock_lp.return_value.parse.return_value = mock_problem
                 with patch("src.cli.solve.SolverRegistry") as mock_reg:
                     mock_reg.get.return_value = lambda p, c: mock_solver
-                    with patch("src.analysis.multi_analysis.MultiLPAnalysis") as mock_ma:
-                        mock_ma.side_effect = RuntimeError("PDF failed")
+                    with patch("src.cli.solve._render_report") as mock_render:
+                        mock_render.side_effect = RuntimeError("report failed")
                         with patch("src.cli.solve._console"):
-                            rc = solve_multi(Path(tmp), pdf=True, verbose=True)
+                            rc = solve_multi(Path(tmp), report_format="pdf", verbose=True)
                             assert rc == 0
         finally:
             os.unlink(tmp)
 
     def test_solve_multi_verbose_top_error(self):
-        from src.cli.solve import solve_multi
         import tempfile
+
+        from src.cli.solve import solve_multi
         with tempfile.NamedTemporaryFile(mode="w", suffix=".lp", delete=False, encoding="utf-8") as f:
             f.write("placeholder")
             tmp = f.name

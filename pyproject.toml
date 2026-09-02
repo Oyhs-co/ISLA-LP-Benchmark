@@ -113,6 +113,14 @@ filterwarnings = [
     "ignore:.*ipywidgets.*:UserWarning:rich.live",
 ]
 
+[dependency-groups]
+dev = [
+    "uvicorn (>=0.48.0,<0.49.0)",
+    "python-multipart (>=0.0.29,<0.0.30)",
+    "pytest (>=9.0.3,<10.0.0)",
+    "pytest-cov (>=7.1.0,<8.0.0)"
+]
+
 [tool.ruff]
 line-length = 100
 target-version = "py312"
